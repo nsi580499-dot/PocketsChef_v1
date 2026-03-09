@@ -40,9 +40,20 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PocketsChefApp() {
     val navController = rememberNavController()
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Hide BottomBar
+    val showBottomBar = currentRoute != NavGraph.Login.route && currentRoute != NavGraph.Signup.route
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        bottomBar = { PocketsChefBottomBar(navController = navController) }
+        bottomBar = {
+            if (showBottomBar) {
+                PocketsChefBottomBar(navController = navController)
+            }
+        }
     ) { innerPadding ->
         PocketsChefNavHost(
             navController = navController,
@@ -81,9 +92,38 @@ fun PocketsChefNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = NavGraph.Home.route,
+        startDestination = NavGraph.Login.route,
         modifier = modifier
     ) {
+        // --- LOGIN ROUTE ---
+        composable(NavGraph.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(NavGraph.Home.route) {
+                        popUpTo(NavGraph.Login.route) { inclusive = true }
+                    }
+                },
+                onNavigateToSignUp = {
+                    navController.navigate(NavGraph.Signup.route)
+                }
+            )
+        }
+
+        // --- SIGN UP ROUTE ---
+        composable(NavGraph.Signup.route) {
+            SignUpScreen(
+                onSignUpSuccess = {
+                    navController.navigate(NavGraph.Home.route) {
+                        popUpTo(NavGraph.Login.route) { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // --- MAIN APP ROUTES ---
         composable(NavGraph.Home.route)    { HomeScreen(navController) }
         composable(NavGraph.Recipes.route) { RecipesScreen(navController) }
         composable(NavGraph.Pantry.route)  { PantryScreen(navController) }

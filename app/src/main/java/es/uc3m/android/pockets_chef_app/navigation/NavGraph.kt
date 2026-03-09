@@ -18,6 +18,8 @@ sealed class NavGraph(
     data object Pantry  : NavGraph("pantry",  "Pantry",  Icons.Default.Inventory2)
     data object Map     : NavGraph("map",     "Map",     Icons.Default.Map)
     data object Profile : NavGraph("profile", "Profile", Icons.Default.Person)
+    data object Login   : NavGraph("login",   "Login",   Icons.Default.Person)
+    data object Signup  : NavGraph("signup",  "Signup",  Icons.Default.Person)
 }
 
 val bottomNavItems = listOf(
