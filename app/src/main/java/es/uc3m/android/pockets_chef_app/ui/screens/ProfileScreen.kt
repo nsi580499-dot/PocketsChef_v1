@@ -21,7 +21,8 @@ import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 fun ProfileScreen(navController: NavController) {
     Column(modifier = Modifier.fillMaxSize()) {
 
-        Surface(color = MaterialTheme.colorScheme.primary) {
+        Surface(color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Text(
                     text = "Profile",
