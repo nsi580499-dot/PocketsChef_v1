@@ -1,38 +1,102 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import es.uc3m.android.pockets_chef_app.R
 
+
+@Composable
+fun ChefLogo(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .wrapContentSize()
+            .padding(bottom = 24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
+                .clip(CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.logo_pocketschef),
+                contentDescription = "Pocket's Chef Logo",
+                modifier = Modifier.size(100.dp)
+            )
+        }
+    }
+}
+
+
+// LOGIN SCREEN
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToSignUp: () -> Unit
 ) {
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp)
+            .imePadding() // Pushes UI up when keyboard opens
+            .verticalScroll(rememberScrollState()), // Makes screen scrollable
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Welcome Back", style = MaterialTheme.typography.headlineLarge)
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(48.dp)) // Top padding
+
+        ChefLogo()
+
+        Text(
+            text = "Welcome Back, Chef!",
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = "Log in to your kitchen dashboard",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp) // Softer corners
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -41,31 +105,40 @@ fun LoginScreen(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Lock Icon") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = {
-                // Check database
-                onLoginSuccess()
-            },
-            modifier = Modifier.fillMaxWidth()
+            onClick = { onLoginSuccess() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp), // Taller, more clickable button
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Sign In")
+            Text("Sign In", style = MaterialTheme.typography.titleMedium)
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Link to Sign Up
         TextButton(onClick = { onNavigateToSignUp() }) {
             Text("Don't have an account? Sign up")
         }
+
+        Spacer(modifier = Modifier.height(48.dp)) // Bottom padding
     }
 }
 
+
+// SIGN UP SCREEN
 @Composable
 fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
@@ -76,47 +149,106 @@ fun SignUpScreen(
     var confirmPassword by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp)
+            .imePadding()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Create Account", style = MaterialTheme.typography.headlineLarge)
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        ChefLogo()
+
+        Text(
+            text = "Create Account",
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = "Start tracking your recipes today",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Lock Icon") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Confirm Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Lock Icon") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
         Spacer(Modifier.height(32.dp))
 
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation())
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(value = confirmPassword, onValueChange = { confirmPassword = it }, label = { Text("Confirm Password") }, visualTransformation = PasswordVisualTransformation())
-
-        Spacer(Modifier.height(32.dp))
-
-        Button(onClick = { onSignUpSuccess() }, modifier = Modifier.fillMaxWidth()) {
-            Text("Sign Up")
+        Button(
+            onClick = { onSignUpSuccess() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Sign Up", style = MaterialTheme.typography.titleMedium)
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // Link back to Login
         TextButton(onClick = { onNavigateToLogin() }) {
             Text("Already have an account? Log in")
         }
+
+        Spacer(modifier = Modifier.height(48.dp))
     }
 }
 
-@Preview(showBackground = true)
+// --------------------------------------------------------
+// PREVIEWS
+// --------------------------------------------------------
+
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SignupPreview() {
-    SignUpScreen(onSignUpSuccess = {},
-        onNavigateToLogin = {}
-    )
+    MaterialTheme {
+        SignUpScreen(onSignUpSuccess = {}, onNavigateToLogin = {})
+    }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LoginPreview() {
-    LoginScreen(onLoginSuccess = {},
-                onNavigateToSignUp = {}
-    )
+    MaterialTheme {
+        LoginScreen(onLoginSuccess = {}, onNavigateToSignUp = {})
+    }
 }
-
