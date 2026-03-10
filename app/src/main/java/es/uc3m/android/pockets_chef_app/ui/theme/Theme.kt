@@ -17,7 +17,7 @@ private val PocketsChefColorScheme = lightColorScheme(
     onSurface          = TextPrimary,
     surfaceVariant     = PrimaryLight,
     error              = ErrorRed,
-    onError            = SurfaceWhite,
+    onError            = SurfaceWhite
 )
 
 @Composable

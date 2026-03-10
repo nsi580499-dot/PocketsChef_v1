@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
+import es.uc3m.android.pockets_chef_app.ui.theme.CardPrimary
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 
 @Composable
@@ -106,6 +108,39 @@ fun HomeScreen(navController: NavController) {
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(20.dp)
             )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Talk with CookAI",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = CardPrimary
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row {
+                Text(
+                    text = "Ask CookAI anything about your kitchen.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(20.dp)
+                )
+                Icon(
+                    imageVector = Icons.Filled.Psychology,
+                    contentDescription = "Notifications",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(20.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(24.dp))
     }
