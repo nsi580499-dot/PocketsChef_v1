@@ -81,4 +81,11 @@
     <string name="cookai_back_desc">Back</string>
     <string name="cookai_send_desc">Send</string>
     <string name="cookai_ai_response">That sounds interesting! Let me think about a recipe with that...</string>
+
+    <!-- Recipe Detail Screen -->
+    <string name="ingredients_title">Ingredients</string>
+    <string name="preparation_time">Estimated Preparation Time: %1$s</string>
+    <string name="start_cooking">Start Cooking!</string>
+    <string name="back">Back</string>
+    <string name="home">Home</string>
 </resources>

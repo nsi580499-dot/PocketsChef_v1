@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
+import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 
@@ -87,7 +88,10 @@ fun RecipesScreen(
                 items(viewModel.recipes, key = { it.id }) { recipe ->
                     RecipeCard(
                         recipe = recipe,
-                        onFavoriteToggle = { viewModel.toggleFavorite(recipe) }
+                        onFavoriteToggle = { viewModel.toggleFavorite(recipe) },
+                        onClick = {
+                            navController.navigate(NavGraph.RecipeDetail.createRoute(recipe.id))
+                        }
                     )
                 }
             }
@@ -96,9 +100,10 @@ fun RecipesScreen(
 }
 
 @Composable
-fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit) {
+fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
