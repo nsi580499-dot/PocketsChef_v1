@@ -20,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -76,7 +75,7 @@ fun RecipeDetailScreen(
                     .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Header Image/Color area (Placeholder for an actual image later)
+                // Header Image/Color area
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -140,7 +139,9 @@ fun RecipeDetailScreen(
 
                     // Start Cooking Button
                     Button(
-                        onClick = { /* TODO: Navigate to Cooking Steps */ },
+                        onClick = { 
+                            navController.navigate(NavGraph.CookingSteps.createRoute(recipe.id))
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),

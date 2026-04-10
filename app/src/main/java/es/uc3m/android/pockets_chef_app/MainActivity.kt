@@ -46,11 +46,12 @@ fun PocketsChefApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Hide BottomBar
+    // Hide BottomBar on certain screens
     val showBottomBar = currentRoute != NavGraph.Login.route && 
                         currentRoute != NavGraph.Signup.route &&
                         currentRoute != NavGraph.CookAI.route &&
-                        currentRoute != NavGraph.RecipeDetail.route
+                        currentRoute != NavGraph.RecipeDetail.route &&
+                        currentRoute?.startsWith("cooking_steps") == false
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -136,13 +137,21 @@ fun PocketsChefNavHost(
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
 
-        // --- DETAIL ROUTES ---
+        // --- DETAIL & STEP ROUTES ---
         composable(
             route = NavGraph.RecipeDetail.route,
             arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
         ) { backStackEntry ->
             val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
             RecipeDetailScreen(navController, recipeId)
+        }
+
+        composable(
+            route = NavGraph.CookingSteps.route,
+            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
+            CookingStepsScreen(navController, recipeId)
         }
     }
 }

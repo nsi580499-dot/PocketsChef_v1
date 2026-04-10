@@ -27,6 +27,10 @@ sealed class NavGraph(
     data object RecipeDetail : NavGraph("recipe_detail/{recipeId}", "Recipe Detail", Icons.Default.Book) {
         fun createRoute(recipeId: Int) = "recipe_detail/$recipeId"
     }
+
+    data object CookingSteps : NavGraph("cooking_steps/{recipeId}", "Cooking Steps", Icons.Default.Book) {
+        fun createRoute(recipeId: Int) = "cooking_steps/$recipeId"
+    }
 }
 
 val bottomNavItems = listOf(
