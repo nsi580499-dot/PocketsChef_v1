@@ -12,11 +12,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.theme.CardPrimary
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
@@ -37,21 +39,21 @@ fun HomeScreen(navController: NavController) {
         ) {
             Column {
                 Text(
-                    text = "Welcome back, Chef!",
+                    text = stringResource(R.string.welcome),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Ready to cook something delicious today?",
+                    text = stringResource(R.string.ready_text),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                 )
             }
             Icon(
                 imageVector = Icons.Default.Notifications,
-                contentDescription = "Notifications",
+                contentDescription = stringResource(R.string.notifications),
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.align(Alignment.TopEnd)
             )
@@ -60,7 +62,7 @@ fun HomeScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
-            text = "Quick Actions",
+            text = stringResource(R.string.quick_actions),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 20.dp)
@@ -73,12 +75,12 @@ fun HomeScreen(navController: NavController) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             QuickActionCard(
-                label = "Browse Recipes",
+                label = stringResource(R.string.browse_recipes),
                 modifier = Modifier.weight(1f),
                 onClick = { navController.navigate(NavGraph.Recipes.route) }
             )
             QuickActionCard(
-                label = "My Pantry",
+                label = stringResource(R.string.my_pantry),
                 modifier = Modifier.weight(1f),
                 onClick = { navController.navigate(NavGraph.Pantry.route) }
             )
@@ -87,7 +89,7 @@ fun HomeScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Items Expiring Soon",
+            text = stringResource(R.string.expiring),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 20.dp)
@@ -103,7 +105,7 @@ fun HomeScreen(navController: NavController) {
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = "Add items to your pantry to track expiry dates.",
+                text = stringResource(R.string.pantry_btn),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(20.dp)
@@ -112,7 +114,7 @@ fun HomeScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Talk with CookAI",
+            text = stringResource(R.string.cookai),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 20.dp)
@@ -129,14 +131,14 @@ fun HomeScreen(navController: NavController) {
         ) {
             Row {
                 Text(
-                    text = "Ask CookAI anything about your kitchen.",
+                    text = stringResource(R.string.ask_cookai),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f),
                     modifier = Modifier.padding(20.dp)
                 )
                 Icon(
                     imageVector = Icons.Filled.Psychology,
-                    contentDescription = "Notifications",
+                    contentDescription = stringResource(R.string.notifications),
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.padding(20.dp)
                 )

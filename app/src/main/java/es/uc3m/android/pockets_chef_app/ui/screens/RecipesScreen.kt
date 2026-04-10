@@ -12,12 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
@@ -32,7 +34,7 @@ fun RecipesScreen(
         Surface(color = MaterialTheme.colorScheme.primary) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Text(
-                    text = "Recipe Collection",
+                    text = stringResource(R.string.recipe_collection_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
@@ -41,7 +43,7 @@ fun RecipesScreen(
                 OutlinedTextField(
                     value = viewModel.searchQuery,
                     onValueChange = { viewModel.searchQuery = it },
-                    placeholder = { Text("Search recipes...") },
+                    placeholder = { Text(stringResource(R.string.search_recipes_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp),
@@ -58,19 +60,20 @@ fun RecipesScreen(
             Tab(
                 selected = !viewModel.showFavoritesOnly,
                 onClick = { viewModel.showFavoritesOnly = false },
-                text = { Text("All Recipes") }
+                text = { Text(stringResource(R.string.all_recipes_tab)) }
             )
             Tab(
                 selected = viewModel.showFavoritesOnly,
                 onClick = { viewModel.showFavoritesOnly = true },
-                text = { Text("Favorites") }
+                text = { Text(stringResource(R.string.favorites_tab)) }
             )
         }
 
         if (viewModel.recipes.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = if (viewModel.showFavoritesOnly) "No favorites yet!" else "No recipes found.",
+                    text = if (viewModel.showFavoritesOnly) stringResource(R.string.no_favorites_message) 
+                           else stringResource(R.string.no_recipes_found_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
@@ -114,7 +117,7 @@ fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${recipe.duration} · ${recipe.servings} servings",
+                    text = stringResource(R.string.recipe_duration_servings, recipe.duration, recipe.servings),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -128,7 +131,7 @@ fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit) {
                 Icon(
                     imageVector = if (recipe.isFavorite) Icons.Default.Favorite
                                   else Icons.Default.FavoriteBorder,
-                    contentDescription = "Toggle favorite",
+                    contentDescription = stringResource(R.string.toggle_favorite_desc),
                     tint = if (recipe.isFavorite) MaterialTheme.colorScheme.primary
                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )
