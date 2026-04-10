@@ -121,6 +121,7 @@ fun HomeScreen(navController: NavController) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Card(
+            onClick = { navController.navigate(NavGraph.CookAI.route) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
@@ -129,16 +130,20 @@ fun HomeScreen(navController: NavController) {
             ),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Row {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = stringResource(R.string.ask_cookai),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                     modifier = Modifier.padding(20.dp)
                 )
                 Icon(
                     imageVector = Icons.Filled.Psychology,
-                    contentDescription = stringResource(R.string.notifications),
+                    contentDescription = stringResource(R.string.cookai),
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.padding(20.dp)
                 )

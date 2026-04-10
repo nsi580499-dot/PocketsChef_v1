@@ -45,7 +45,9 @@ fun PocketsChefApp() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     // Hide BottomBar
-    val showBottomBar = currentRoute != NavGraph.Login.route && currentRoute != NavGraph.Signup.route
+    val showBottomBar = currentRoute != NavGraph.Login.route && 
+                        currentRoute != NavGraph.Signup.route &&
+                        currentRoute != NavGraph.CookAI.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -129,5 +131,6 @@ fun PocketsChefNavHost(
         composable(NavGraph.Pantry.route)  { PantryScreen(navController) }
         composable(NavGraph.Map.route)     { MapScreen(navController) }
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
+        composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
     }
 }

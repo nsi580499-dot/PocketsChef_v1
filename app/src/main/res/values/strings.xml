@@ -1,5 +1,4 @@
 <resources>
-    <!-- Home Screen -->
     <string name="app_name">PocketsChef</string>
     <string name="welcome">Welcome back, Chef!</string>
     <string name="ready_text">Ready to cook something delicious today?</string>
@@ -11,8 +10,6 @@
     <string name="pantry_btn">Add items to your pantry to track expiry dates.</string>
     <string name="cookai">Talk with CookAI</string>
     <string name="ask_cookai">Ask CookAI anything about your kitchen.</string>
-
-    <!-- Login Screen -->
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="welcome_back">Welcome Back, Chef!</string>
@@ -27,8 +24,6 @@
     <string name="logo_desc">Pocket\'s Chef Logo</string>
     <string name="email_icon_desc">Email Icon</string>
     <string name="lock_icon_desc">Lock Icon</string>
-
-    <!-- Map Screen -->
     <string name="nearby_supermarkets">Nearby Supermarkets</string>
     <string name="find_stores">Find stores near you</string>
     <string name="maps_coming_soon">Maps coming soon</string>
@@ -79,4 +74,11 @@
     <string name="expiry_alerts_label">Expiry Alerts</string>
     <string name="more_settings_coming_soon">More settings coming soon</string>
     <string name="profile_icon_desc">Profile Icon</string>
+
+    <!-- CookAI Screen -->
+    <string name="cookai_greeting">Hello Chef! I\'m CookAI. How can I help you today?</string>
+    <string name="cookai_placeholder">Ask something...</string>
+    <string name="cookai_back_desc">Back</string>
+    <string name="cookai_send_desc">Send</string>
+    <string name="cookai_ai_response">That sounds interesting! Let me think about a recipe with that...</string>
 </resources>

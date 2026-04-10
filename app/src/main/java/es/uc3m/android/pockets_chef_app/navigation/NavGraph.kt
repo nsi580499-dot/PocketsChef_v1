@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class NavGraph(
@@ -20,6 +21,7 @@ sealed class NavGraph(
     data object Profile : NavGraph("profile", "Profile", Icons.Default.Person)
     data object Login   : NavGraph("login",   "Login",   Icons.Default.Person)
     data object Signup  : NavGraph("signup",  "Signup",  Icons.Default.Person)
+    data object CookAI  : NavGraph("cookai",  "CookAI",  Icons.Default.Psychology)
 }
 
 val bottomNavItems = listOf(
