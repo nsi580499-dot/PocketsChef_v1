@@ -12,6 +12,9 @@ navigationCompose = "2.7.7"
 coreSplashscreen = "1.0.1"
 appcompat = "1.6.1"
 foundation = "1.10.6"
+mapsCompose = "6.1.2"
+playServicesMaps = "19.0.0"
+playServicesMapsVersion = "20.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +37,9 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+gms-play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMapsVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

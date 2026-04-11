@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/pockets_chef_launcher"
@@ -8,6 +12,11 @@
         android:roundIcon="@mipmap/pockets_chef_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PocketsChef.Splash">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCo-8n6Q8Jj7gINE4SpgBtbYAgmmcndUFE" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
