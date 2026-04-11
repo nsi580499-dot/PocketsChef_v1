@@ -1,5 +1,6 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,9 +10,12 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,15 +36,29 @@ fun RecipesScreen(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
 
-        Surface(color = MaterialTheme.colorScheme.primary) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        // Elegant Unified Header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
+                )
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+        ) {
+            Column {
                 Text(
                     text = stringResource(R.string.recipe_collection_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
                     value = viewModel.searchQuery,
                     onValueChange = { viewModel.searchQuery = it },
@@ -51,22 +69,34 @@ fun RecipesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
                     )
                 )
             }
         }
 
-        TabRow(selectedTabIndex = if (viewModel.showFavoritesOnly) 1 else 0) {
+        TabRow(
+            selectedTabIndex = if (viewModel.showFavoritesOnly) 1 else 0,
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.primary,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    Modifier.tabIndicatorOffset(tabPositions[if (viewModel.showFavoritesOnly) 1 else 0]),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        ) {
             Tab(
                 selected = !viewModel.showFavoritesOnly,
                 onClick = { viewModel.showFavoritesOnly = false },
-                text = { Text(stringResource(R.string.all_recipes_tab)) }
+                text = { Text(stringResource(R.string.all_recipes_tab), fontWeight = FontWeight.Bold) }
             )
             Tab(
                 selected = viewModel.showFavoritesOnly,
                 onClick = { viewModel.showFavoritesOnly = true },
-                text = { Text(stringResource(R.string.favorites_tab)) }
+                text = { Text(stringResource(R.string.favorites_tab), fontWeight = FontWeight.Bold) }
             )
         }
 
@@ -104,8 +134,9 @@ fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit, onClick: () -> Unit
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -118,7 +149,7 @@ fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit, onClick: () -> Unit
                 Text(
                     text = recipe.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -129,7 +160,8 @@ fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit, onClick: () -> Unit
                 Spacer(modifier = Modifier.height(4.dp))
                 SuggestionChip(
                     onClick = {},
-                    label = { Text(recipe.category, style = MaterialTheme.typography.labelSmall) }
+                    label = { Text(recipe.category, style = MaterialTheme.typography.labelSmall) },
+                    shape = RoundedCornerShape(8.dp)
                 )
             }
             IconButton(onClick = onFavoriteToggle) {

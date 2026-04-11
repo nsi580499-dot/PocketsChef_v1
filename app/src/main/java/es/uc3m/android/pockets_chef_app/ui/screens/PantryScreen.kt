@@ -1,5 +1,6 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,9 +70,22 @@ fun PantryScreen(
             .fillMaxSize()
             .padding(innerPadding)) {
 
-            Surface(color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            // Elegant Unified Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
+                    )
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
+            ) {
+                Column {
                     Text(
                         text = stringResource(R.string.my_pantry),
                         style = MaterialTheme.typography.headlineSmall,
@@ -85,7 +100,7 @@ fun PantryScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),

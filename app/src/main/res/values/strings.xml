@@ -74,6 +74,19 @@
     <string name="expiry_alerts_label">Expiry Alerts</string>
     <string name="more_settings_coming_soon">More settings coming soon</string>
     <string name="profile_icon_desc">Profile Icon</string>
+    <string name="about_me_section">About Me</string>
+    <string name="cooking_level_section">Cooking Journey</string>
+    <string name="dietary_preferences_section">Dietary Preferences</string>
+    <string name="cooking_level_beginner">Beginner</string>
+    <string name="cooking_level_intermediate">Intermediate</string>
+    <string name="cooking_level_pro">Pro Chef</string>
+    <string name="diet_vegetarian">Vegetarian</string>
+    <string name="diet_vegan">Vegan</string>
+    <string name="diet_gluten_free">Gluten-Free</string>
+    <string name="diet_keto">Keto</string>
+    <string name="chef_bio_placeholder">Passionate about home cooking and experimenting with new spices.</string>
+    <string name="stats_recipes_cooked">Recipes Cooked</string>
+    <string name="stats_pantry_items">Pantry Items</string>
 
     <!-- CookAI Screen -->
     <string name="cookai_greeting">Hello Chef! I\'m CookAI. How can I help you today?</string>
