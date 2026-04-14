@@ -13,10 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.navigation.bottomNavItems
 import es.uc3m.android.pockets_chef_app.ui.screens.*
@@ -44,8 +46,12 @@ fun PocketsChefApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Hide BottomBar
-    val showBottomBar = currentRoute != NavGraph.Login.route && currentRoute != NavGraph.Signup.route
+    // Hide BottomBar on certain screens
+    val showBottomBar = currentRoute != NavGraph.Login.route && 
+                        currentRoute != NavGraph.Signup.route &&
+                        currentRoute != NavGraph.CookAI.route &&
+                        currentRoute != NavGraph.RecipeDetail.route &&
+                        currentRoute?.startsWith("cooking_steps") == false
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -129,5 +135,23 @@ fun PocketsChefNavHost(
         composable(NavGraph.Pantry.route)  { PantryScreen(navController) }
         composable(NavGraph.Map.route)     { MapScreen(navController) }
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
+        composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
+
+        // --- DETAIL & STEP ROUTES ---
+        composable(
+            route = NavGraph.RecipeDetail.route,
+            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
+            RecipeDetailScreen(navController, recipeId)
+        }
+
+        composable(
+            route = NavGraph.CookingSteps.route,
+            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
+            CookingStepsScreen(navController, recipeId)
+        }
     }
 }

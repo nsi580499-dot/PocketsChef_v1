@@ -1,3 +1,104 @@
 <resources>
     <string name="app_name">PocketsChef</string>
+    <string name="welcome">Welcome back, Chef!</string>
+    <string name="ready_text">Ready to cook something delicious today?</string>
+    <string name="notifications">Notifications</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="browse_recipes">Browse Recipes</string>
+    <string name="my_pantry">My Pantry</string>
+    <string name="expiring">Items Expiring Soon</string>
+    <string name="pantry_btn">Add items to your pantry to track expiry dates.</string>
+    <string name="cookai">Talk with CookAI</string>
+    <string name="ask_cookai">Ask CookAI anything about your kitchen.</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="welcome_back">Welcome Back, Chef!</string>
+    <string name="login">Log in to your kitchen dashboard</string>
+    <string name="signin">Sign In</string>
+    <string name="no_account">Don\'t have an account? Sign up</string>
+    <string name="create_account">Create Account</string>
+    <string name="start_sign_in">Start tracking your recipes today</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="already_log_in">Already have an account? Log in</string>
+    <string name="logo_desc">Pocket\'s Chef Logo</string>
+    <string name="email_icon_desc">Email Icon</string>
+    <string name="lock_icon_desc">Lock Icon</string>
+    <string name="nearby_supermarkets">Nearby Supermarkets</string>
+    <string name="find_stores">Find stores near you</string>
+    <string name="maps_coming_soon">Maps coming soon</string>
+    <string name="google_maps_integration">Google Maps integration will be added here.</string>
+    <string name="add_item">Add item</string>
+    <string name="items_in_your_pantry">%1$d items in your pantry</string>
+    <string name="no_items">No items yet. Tap + to add!</string>
+    <string name="delete">Delete</string>
+
+    <!-- Pantry Screen -->
+    <string name="add_pantry_item_title">Add Pantry Item</string>
+    <string name="item_name_label">Item name</string>
+    <string name="qty_label">Qty</string>
+    <string name="unit_label">Unit</string>
+    <string name="expires_in_days_label">Expires in (days)</string>
+    <string name="category_label">Category</string>
+    <string name="add_button">Add</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="expired">Expired</string>
+    <string name="expires_today">Expires today!</string>
+    <string name="expires_tomorrow">Expires tomorrow</string>
+    <string name="expires_in_days">Expires in %1$d days</string>
+    <string name="unit_units">units</string>
+
+    <!-- Categories -->
+    <string name="category_all">All</string>
+    <string name="category_dairy">Dairy</string>
+    <string name="category_meat">Meat</string>
+    <string name="category_vegetables">Vegetables</string>
+    <string name="category_grains">Grains</string>
+    <string name="category_condiments">Condiments</string>
+
+    <!-- Recipes Screen -->
+    <string name="recipe_collection_title">Recipe Collection</string>
+    <string name="search_recipes_placeholder">Search recipes...</string>
+    <string name="all_recipes_tab">All Recipes</string>
+    <string name="favorites_tab">Favorites</string>
+    <string name="no_favorites_message">No favorites yet!</string>
+    <string name="no_recipes_found_message">No recipes found.</string>
+    <string name="recipe_duration_servings">%1$s · %2$d servings</string>
+    <string name="toggle_favorite_desc">Toggle favorite</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_title">Profile</string>
+    <string name="my_chef_profile">My Chef Profile</string>
+    <string name="preferences_section">Preferences</string>
+    <string name="push_notifications_label">Push Notifications</string>
+    <string name="expiry_alerts_label">Expiry Alerts</string>
+    <string name="more_settings_coming_soon">More settings coming soon</string>
+    <string name="profile_icon_desc">Profile Icon</string>
+    <string name="about_me_section">About Me</string>
+    <string name="cooking_level_section">Cooking Journey</string>
+    <string name="dietary_preferences_section">Dietary Preferences</string>
+    <string name="cooking_level_beginner">Beginner</string>
+    <string name="cooking_level_intermediate">Intermediate</string>
+    <string name="cooking_level_pro">Pro Chef</string>
+    <string name="diet_vegetarian">Vegetarian</string>
+    <string name="diet_vegan">Vegan</string>
+    <string name="diet_gluten_free">Gluten-Free</string>
+    <string name="diet_keto">Keto</string>
+    <string name="chef_bio_placeholder">Passionate about home cooking and experimenting with new spices.</string>
+    <string name="stats_recipes_cooked">Recipes Cooked</string>
+    <string name="stats_pantry_items">Pantry Items</string>
+
+    <!-- CookAI Screen -->
+    <string name="cookai_greeting">Hello Chef! I\'m CookAI. How can I help you today?</string>
+    <string name="cookai_placeholder">Ask something...</string>
+    <string name="cookai_back_desc">Back</string>
+    <string name="cookai_send_desc">Send</string>
+    <string name="cookai_ai_response">That sounds interesting! Let me think about a recipe with that...</string>
+
+    <!-- Recipe Detail Screen -->
+    <string name="ingredients_title">Ingredients</string>
+    <string name="preparation_time">Estimated Preparation Time: %1$s</string>
+    <string name="start_cooking">Start Cooking!</string>
+    <string name="back">Back</string>
+    <string name="home">Home</string>
 </resources>

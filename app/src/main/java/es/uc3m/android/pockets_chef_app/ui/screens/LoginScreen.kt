@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -42,7 +43,7 @@ fun ChefLogo(modifier: Modifier = Modifier) {
         ) {
             Image(
                 painter = painterResource(R.drawable.logo_pocketschef),
-                contentDescription = "Pocket's Chef Logo",
+                contentDescription = stringResource(R.string.logo_desc),
                 modifier = Modifier.size(100.dp)
             )
         }
@@ -74,13 +75,13 @@ fun LoginScreen(
         ChefLogo()
 
         Text(
-            text = "Welcome Back, Chef!",
+            text = stringResource(R.string.welcome_back),
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
         Text(
-            text = "Log in to your kitchen dashboard",
+            text = stringResource(R.string.login),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 32.dp)
@@ -89,8 +90,10 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+            label = {
+                Text(stringResource(R.string.email))
+            },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = stringResource(R.string.email_icon_desc)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -104,8 +107,8 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Lock Icon") },
+            label = { Text(stringResource(R.string.password)) },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc)) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
@@ -124,13 +127,13 @@ fun LoginScreen(
                 .height(50.dp), // Taller, more clickable button
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Sign In", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.signin), style = MaterialTheme.typography.titleMedium)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = { onNavigateToSignUp() }) {
-            Text("Don't have an account? Sign up")
+            Text(stringResource(R.string.no_account))
         }
 
         Spacer(modifier = Modifier.height(48.dp)) // Bottom padding
@@ -163,13 +166,13 @@ fun SignUpScreen(
         ChefLogo()
 
         Text(
-            text = "Create Account",
+            text = stringResource(R.string.create_account),
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
         Text(
-            text = "Start tracking your recipes today",
+            text = stringResource(R.string.start_sign_in),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 32.dp)
@@ -178,8 +181,8 @@ fun SignUpScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+            label = { Text(stringResource(R.string.email)) },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = stringResource(R.string.email_icon_desc)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
@@ -190,8 +193,8 @@ fun SignUpScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Lock Icon") },
+            label = { Text(stringResource(R.string.password)) },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc)) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
             modifier = Modifier.fillMaxWidth(),
@@ -203,8 +206,8 @@ fun SignUpScreen(
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
-            label = { Text("Confirm Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Lock Icon") },
+            label = { Text(stringResource(R.string.confirm_password)) },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc)) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth(),
@@ -220,13 +223,13 @@ fun SignUpScreen(
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Sign Up", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.sign_up), style = MaterialTheme.typography.titleMedium)
         }
 
         Spacer(Modifier.height(16.dp))
 
         TextButton(onClick = { onNavigateToLogin() }) {
-            Text("Already have an account? Log in")
+            Text(stringResource(R.string.already_log_in))
         }
 
         Spacer(modifier = Modifier.height(48.dp))

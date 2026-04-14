@@ -1,5 +1,6 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,13 +23,23 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.PantryItem
 import es.uc3m.android.pockets_chef_app.ui.theme.ErrorRed
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.theme.WarningAmber
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.PantryViewModel
 
-private val categories = listOf("All", "Dairy", "Meat", "Vegetables", "Grains", "Condiments")
+private data class CategoryInfo(val name: String, val resId: Int)
+
+private val categories = listOf(
+    CategoryInfo("All", R.string.category_all),
+    CategoryInfo("Dairy", R.string.category_dairy),
+    CategoryInfo("Meat", R.string.category_meat),
+    CategoryInfo("Vegetables", R.string.category_vegetables),
+    CategoryInfo("Grains", R.string.category_grains),
+    CategoryInfo("Condiments", R.string.category_condiments)
+)
 
 @Composable
 fun PantryScreen(
@@ -47,32 +60,47 @@ fun PantryScreen(
             ) {
                 Icon(
                     Icons.Default.Add,
-                    contentDescription = "Add item",
+                    contentDescription = stringResource(R.string.add_item),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
 
-            Surface(color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            // Elegant Unified Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
+                    )
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
+            ) {
+                Column {
                     Text(
-                        text = "My Pantry",
+                        text = stringResource(R.string.my_pantry),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
-                        text = "${viewModel.items.size} items in your pantry",
+                        text = stringResource(R.string.items_in_your_pantry, viewModel.items.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
@@ -80,9 +108,9 @@ fun PantryScreen(
             ) {
                 items(categories) { category ->
                     FilterChip(
-                        selected = selectedCategory == category,
-                        onClick = { selectedCategory = category },
-                        label = { Text(category) }
+                        selected = selectedCategory == category.name,
+                        onClick = { selectedCategory = category.name },
+                        label = { Text(stringResource(category.resId)) }
                     )
                 }
             }
@@ -92,7 +120,7 @@ fun PantryScreen(
             if (displayedItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "No items yet. Tap + to add!",
+                        text = stringResource(R.string.no_items),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
@@ -156,15 +184,16 @@ fun PantryItemCard(item: PantryItem, onDelete: () -> Unit) {
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val categoryResId = categories.find { it.name == item.category }?.resId ?: R.string.category_all
                 SuggestionChip(
                     onClick = {},
-                    label = { Text(item.category, style = MaterialTheme.typography.labelSmall) }
+                    label = { Text(stringResource(categoryResId), style = MaterialTheme.typography.labelSmall) }
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.delete),
                         tint = ErrorRed.copy(alpha = 0.7f)
                     )
                 }
@@ -177,20 +206,22 @@ fun PantryItemCard(item: PantryItem, onDelete: () -> Unit) {
 fun AddPantryItemDialog(onDismiss: () -> Unit, onConfirm: (PantryItem) -> Unit) {
     var name by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("1") }
-    var unit by remember { mutableStateOf("units") }
-    var selectedCategory by remember { mutableStateOf("Vegetables") }
+    var unit by remember { mutableStateOf("") }
+    if (unit.isEmpty()) unit = stringResource(R.string.unit_units)
+    
+    var selectedCategoryName by remember { mutableStateOf("Vegetables") }
     var daysUntilExpiry by remember { mutableStateOf("7") }
-    val itemCategories = listOf("Dairy", "Meat", "Vegetables", "Grains", "Condiments")
+    val itemCategories = categories.filter { it.name != "All" }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Pantry Item", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.add_pantry_item_title), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Item name") },
+                    label = { Text(stringResource(R.string.item_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -198,7 +229,7 @@ fun AddPantryItemDialog(onDismiss: () -> Unit, onConfirm: (PantryItem) -> Unit) 
                     OutlinedTextField(
                         value = quantity,
                         onValueChange = { quantity = it },
-                        label = { Text("Qty") },
+                        label = { Text(stringResource(R.string.qty_label)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f)
@@ -206,7 +237,7 @@ fun AddPantryItemDialog(onDismiss: () -> Unit, onConfirm: (PantryItem) -> Unit) 
                     OutlinedTextField(
                         value = unit,
                         onValueChange = { unit = it },
-                        label = { Text("Unit") },
+                        label = { Text(stringResource(R.string.unit_label)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
@@ -214,18 +245,18 @@ fun AddPantryItemDialog(onDismiss: () -> Unit, onConfirm: (PantryItem) -> Unit) 
                 OutlinedTextField(
                     value = daysUntilExpiry,
                     onValueChange = { daysUntilExpiry = it },
-                    label = { Text("Expires in (days)") },
+                    label = { Text(stringResource(R.string.expires_in_days_label)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text("Category", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.category_label), style = MaterialTheme.typography.labelMedium)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(itemCategories) { cat ->
                         FilterChip(
-                            selected = selectedCategory == cat,
-                            onClick = { selectedCategory = cat },
-                            label = { Text(cat, style = MaterialTheme.typography.labelSmall) }
+                            selected = selectedCategoryName == cat.name,
+                            onClick = { selectedCategoryName = cat.name },
+                            label = { Text(stringResource(cat.resId), style = MaterialTheme.typography.labelSmall) }
                         )
                     }
                 }
@@ -241,26 +272,27 @@ fun AddPantryItemDialog(onDismiss: () -> Unit, onConfirm: (PantryItem) -> Unit) 
                             name = name.trim(),
                             quantity = quantity.ifBlank { "1" },
                             unit = unit.trim(),
-                            category = selectedCategory,
+                            category = selectedCategoryName,
                             expiryDate = expiryMs,
                             isExpiringSoon = days <= 3
                         )
                     )
                 },
                 enabled = name.isNotBlank()
-            ) { Text("Add") }
+            ) { Text(stringResource(R.string.add_button)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel_button)) } }
     )
 }
 
+@Composable
 fun formatExpiry(expiryMs: Long): String {
     val daysLeft = ((expiryMs - System.currentTimeMillis()) / (1000 * 60 * 60 * 24)).toInt()
     return when {
-        daysLeft < 0  -> "Expired"
-        daysLeft == 0 -> "Expires today!"
-        daysLeft == 1 -> "Expires tomorrow"
-        else          -> "Expires in $daysLeft days"
+        daysLeft < 0  -> stringResource(R.string.expired)
+        daysLeft == 0 -> stringResource(R.string.expires_today)
+        daysLeft == 1 -> stringResource(R.string.expires_tomorrow)
+        else          -> stringResource(R.string.expires_in_days, daysLeft)
     }
 }
 
