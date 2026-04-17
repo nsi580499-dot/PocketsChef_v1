@@ -1,6 +1,7 @@
 package es.uc3m.android.pockets_chef_app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,14 +29,20 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen().apply {
-            setKeepOnScreenCondition { false }
-        }
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        
+        Log.d("PocketsChef", "MainActivity onCreate")
+        
         enableEdgeToEdge()
         setContent {
             PocketsChefTheme {
-                PocketsChefApp()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    PocketsChefApp()
+                }
             }
         }
     }
@@ -46,19 +53,21 @@ fun PocketsChefApp() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     
-    // Forzamos temporalmente el inicio en Login para depurar por qué sale la pantalla negra
-    // Una vez funcione, volveremos a usar: if (authViewModel.isUserLoggedIn()) ...
-    val startDestination = NavGraph.Login.route
+    val startDestination = if (authViewModel.isUserLoggedIn()) {
+        NavGraph.Home.route
+    } else {
+        NavGraph.Login.route
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Ocultar la barra inferior en pantallas de autenticación y detalles
-    val showBottomBar = currentRoute != NavGraph.Login.route && 
+    val showBottomBar = currentRoute != null && 
+                        currentRoute != NavGraph.Login.route && 
                         currentRoute != NavGraph.Signup.route &&
                         currentRoute != NavGraph.CookAI.route &&
                         currentRoute != NavGraph.RecipeDetail.route &&
-                        currentRoute?.startsWith("cooking_steps") == false
+                        !currentRoute.startsWith("cooking_steps")
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -68,15 +77,11 @@ fun PocketsChefApp() {
             }
         }
     ) { innerPadding ->
-        Surface(
-            modifier = Modifier.padding(innerPadding),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            PocketsChefNavHost(
-                navController = navController,
-                startDestination = startDestination
-            )
-        }
+        PocketsChefNavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 }
 
@@ -130,6 +135,7 @@ fun PocketsChefNavHost(
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
+                    // Volvemos a Home tras el registro ya que quitamos CompleteProfile
                     navController.navigate(NavGraph.Home.route) {
                         popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }
@@ -139,8 +145,6 @@ fun PocketsChefNavHost(
                 }
             )
         }
-
-
 
         composable(NavGraph.Home.route)    { HomeScreen(navController) }
         composable(NavGraph.Recipes.route) { RecipesScreen(navController) }
