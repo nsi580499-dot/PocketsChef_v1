@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -23,6 +24,7 @@ import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.navigation.bottomNavItems
 import es.uc3m.android.pockets_chef_app.ui.screens.*
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,11 +44,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PocketsChefApp() {
     val navController = rememberNavController()
+    val authViewModel: AuthViewModel = viewModel()
+    
+    // Forzamos temporalmente el inicio en Login para depurar por qué sale la pantalla negra
+    // Una vez funcione, volveremos a usar: if (authViewModel.isUserLoggedIn()) ...
+    val startDestination = NavGraph.Login.route
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Hide BottomBar on certain screens
+    // Ocultar la barra inferior en pantallas de autenticación y detalles
     val showBottomBar = currentRoute != NavGraph.Login.route && 
                         currentRoute != NavGraph.Signup.route &&
                         currentRoute != NavGraph.CookAI.route &&
@@ -61,10 +68,15 @@ fun PocketsChefApp() {
             }
         }
     ) { innerPadding ->
-        PocketsChefNavHost(
-            navController = navController,
-            modifier = Modifier.padding(innerPadding)
-        )
+        Surface(
+            modifier = Modifier.padding(innerPadding),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            PocketsChefNavHost(
+                navController = navController,
+                startDestination = startDestination
+            )
+        }
     }
 }
 
@@ -94,14 +106,14 @@ fun PocketsChefBottomBar(navController: NavController) {
 @Composable
 fun PocketsChefNavHost(
     navController: NavHostController,
+    startDestination: String,
     modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = NavGraph.Login.route,
+        startDestination = startDestination,
         modifier = modifier
     ) {
-        // --- LOGIN ROUTE ---
         composable(NavGraph.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
@@ -115,12 +127,11 @@ fun PocketsChefNavHost(
             )
         }
 
-        // --- SIGN UP ROUTE ---
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
                     navController.navigate(NavGraph.Home.route) {
-                        popUpTo(NavGraph.Login.route) { inclusive = true }
+                        popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }
                 },
                 onNavigateToLogin = {
@@ -129,7 +140,8 @@ fun PocketsChefNavHost(
             )
         }
 
-        // --- MAIN APP ROUTES ---
+
+
         composable(NavGraph.Home.route)    { HomeScreen(navController) }
         composable(NavGraph.Recipes.route) { RecipesScreen(navController) }
         composable(NavGraph.Pantry.route)  { PantryScreen(navController) }
@@ -137,7 +149,6 @@ fun PocketsChefNavHost(
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
 
-        // --- DETAIL & STEP ROUTES ---
         composable(
             route = NavGraph.RecipeDetail.route,
             arguments = listOf(navArgument("recipeId") { type = NavType.IntType })

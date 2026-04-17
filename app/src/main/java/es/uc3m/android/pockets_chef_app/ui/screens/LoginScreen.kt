@@ -24,8 +24,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import es.uc3m.android.pockets_chef_app.R
-
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 
 @Composable
 fun ChefLogo(modifier: Modifier = Modifier) {
@@ -50,8 +51,6 @@ fun ChefLogo(modifier: Modifier = Modifier) {
     }
 }
 
-
-// LOGIN SCREEN
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -60,17 +59,28 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    val authViewModel: AuthViewModel = viewModel()
+    val authSuccess by authViewModel.authSuccess.collectAsState()
+    val errorMessage by authViewModel.errorMessage.collectAsState()
+
+    LaunchedEffect(authSuccess) {
+        if (authSuccess) {
+            onLoginSuccess()
+        }
+    }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 32.dp)
-            .imePadding() // Pushes UI up when keyboard opens
-            .verticalScroll(rememberScrollState()), // Makes screen scrollable
+            .imePadding()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
 
-        Spacer(modifier = Modifier.height(48.dp)) // Top padding
+        Spacer(modifier = Modifier.height(48.dp))
 
         ChefLogo()
 
@@ -93,13 +103,18 @@ fun LoginScreen(
             label = {
                 Text(stringResource(R.string.email))
             },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = stringResource(R.string.email_icon_desc)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Email,
+                    contentDescription = stringResource(R.string.email_icon_desc)
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
             ),
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp) // Softer corners
+            shape = RoundedCornerShape(12.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -108,7 +123,12 @@ fun LoginScreen(
             value = password,
             onValueChange = { password = it },
             label = { Text(stringResource(R.string.password)) },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = stringResource(R.string.lock_icon_desc)
+                )
+            },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
@@ -121,13 +141,27 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { onLoginSuccess() },
+            onClick = {
+                authViewModel.login(email.trim(), password)
+            },
+
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp), // Taller, more clickable button
+                .height(50.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(stringResource(R.string.signin), style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.signin),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+        errorMessage?.let {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -136,12 +170,10 @@ fun LoginScreen(
             Text(stringResource(R.string.no_account))
         }
 
-        Spacer(modifier = Modifier.height(48.dp)) // Bottom padding
+        Spacer(modifier = Modifier.height(48.dp))
     }
 }
 
-
-// SIGN UP SCREEN
 @Composable
 fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
@@ -150,6 +182,17 @@ fun SignUpScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    val authViewModel: AuthViewModel = viewModel()
+    val authSuccess by authViewModel.authSuccess.collectAsState()
+    val errorMessage by authViewModel.errorMessage.collectAsState()
+
+    LaunchedEffect(authSuccess) {
+        if (authSuccess) {
+            onSignUpSuccess()
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -182,51 +225,99 @@ fun SignUpScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text(stringResource(R.string.email)) },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = stringResource(R.string.email_icon_desc)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Email,
+                    contentDescription = stringResource(R.string.email_icon_desc)
+                )
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text(stringResource(R.string.password)) },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = stringResource(R.string.lock_icon_desc)
+                )
+            },
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
             label = { Text(stringResource(R.string.confirm_password)) },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = stringResource(R.string.lock_icon_desc)
+                )
+            },
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { onSignUpSuccess() },
+            onClick = {
+                authViewModel.signUp(email.trim(), password)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(stringResource(R.string.sign_up), style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.sign_up),
+                style = MaterialTheme.typography.titleMedium
+            )
         }
 
-        Spacer(Modifier.height(16.dp))
+
+        if (password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Las contraseñas no coinciden",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        } else {
+            errorMessage?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = { onNavigateToLogin() }) {
             Text(stringResource(R.string.already_log_in))
@@ -235,10 +326,6 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(48.dp))
     }
 }
-
-// --------------------------------------------------------
-// PREVIEWS
-// --------------------------------------------------------
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

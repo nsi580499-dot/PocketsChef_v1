@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -29,6 +31,8 @@ import es.uc3m.android.pockets_chef_app.ui.theme.ErrorRed
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.theme.WarningAmber
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.PantryViewModel
+
+
 
 private data class CategoryInfo(val name: String, val resId: Int)
 
@@ -48,9 +52,10 @@ fun PantryScreen(
 ) {
     var selectedCategory by remember { mutableStateOf("All") }
     var showAddDialog by remember { mutableStateOf(false) }
+    val items by viewModel.items.collectAsState()
 
-    val displayedItems = if (selectedCategory == "All") viewModel.items
-                         else viewModel.items.filter { it.category == selectedCategory }
+    val displayedItems = if (selectedCategory == "All") items
+    else items.filter { it.category == selectedCategory }
 
     Scaffold(
         floatingActionButton = {
@@ -93,7 +98,7 @@ fun PantryScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
-                        text = stringResource(R.string.items_in_your_pantry, viewModel.items.size),
+                        text = stringResource(R.string.items_in_your_pantry, items.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
