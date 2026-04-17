@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +23,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,22 +33,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    profileViewModel: UserProfileViewModel = viewModel()
 ) {
-
-    // 🔹 Datos estáticos (como antes)
-    val name = "Chef Mario"
-    val email = "chef.mario@pocketschef.com"
-    val description = "Passionate home chef who loves Italian cuisine."
-    val age = "25"
-    val level = "Intermediate"
-    val diet = listOf("Vegetarian", "Low Carb")
-    val allergies = listOf("Peanuts")
-    val favoriteCuisine = "Italian"
+    val profile by profileViewModel.profile.collectAsState()
 
     Column(
         modifier = Modifier
@@ -53,8 +50,6 @@ fun ProfileScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
-        // 🔹 Header
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -73,7 +68,7 @@ fun ProfileScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = name.first().uppercase(),
+                        text = if (profile.name.isNotBlank()) profile.name.first().uppercase() else "U",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -83,7 +78,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = name,
+                    text = if (profile.name.isBlank()) "No name yet" else profile.name,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -91,20 +86,40 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = email,
+                    text = profile.email,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        ProfileInfoCard("Description", description)
-        ProfileInfoCard("Age", age)
-        ProfileInfoCard("Level", level)
-        ProfileInfoCard("Favourite cuisine", favoriteCuisine)
+        ProfileInfoCard(
+            "Description",
+            if (profile.description.isBlank()) "No description yet" else profile.description
+        )
 
-        ProfileChipsCard("Diet preferences", diet)
-        ProfileChipsCard("Allergies", allergies)
+        ProfileInfoCard(
+            "Age",
+            profile.age.toString()
+        )
+
+        ProfileInfoCard(
+            "Level",
+            profile.level
+        )
+
+        ProfileInfoCard(
+            "Favourite cuisine",
+            if (profile.favoriteCuisine.isBlank()) "Not set" else profile.favoriteCuisine
+        )
+
+        ProfileInfoCard(
+            "Photo URL",
+            if (profile.photoUrl.isBlank()) "Not set" else profile.photoUrl
+        )
+
+        ProfileChipsCard("Diet preferences", profile.diet)
+        ProfileChipsCard("Allergies", profile.allergies)
 
         Button(
             onClick = {
@@ -175,9 +190,10 @@ private fun ProfileChipsCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChipsRow(items: List<String>) {
-    androidx.compose.foundation.layout.FlowRow(
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)

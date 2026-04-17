@@ -3,6 +3,8 @@ package es.uc3m.android.pockets_chef_app.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import es.uc3m.android.pockets_chef_app.data.model.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,9 +14,13 @@ import kotlinx.coroutines.tasks.await
 class AuthViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
-    private val _authSuccess = MutableStateFlow(false)
-    val authSuccess: StateFlow<Boolean> = _authSuccess.asStateFlow()
+    private val _loginSuccess = MutableStateFlow(false)
+    val loginSuccess: StateFlow<Boolean> = _loginSuccess.asStateFlow()
+
+    private val _signUpSuccess = MutableStateFlow(false)
+    val signUpSuccess: StateFlow<Boolean> = _signUpSuccess.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
@@ -23,7 +29,33 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 auth.createUserWithEmailAndPassword(email, password).await()
-                _authSuccess.value = true
+
+                val currentUser = auth.currentUser ?: return@launch
+                val uid = currentUser.uid
+                val userEmail = currentUser.email ?: email
+
+                val initialProfile = UserProfile(
+                    userId = uid,
+                    email = userEmail,
+                    name = "",
+                    age = 18,
+                    description = "",
+                    level = "Beginner",
+                    diet = emptyList(),
+                    allergies = emptyList(),
+                    favoriteRecipes = emptyList(),
+                    pantryItemIds = emptyList(),
+                    photoUrl = "",
+                    favoriteCuisine = "",
+                    createdAt = System.currentTimeMillis()
+                )
+
+                firestore.collection("users")
+                    .document(uid)
+                    .set(initialProfile)
+                    .await()
+
+                _signUpSuccess.value = true
             } catch (e: Exception) {
                 _errorMessage.value = e.message
             }
@@ -34,7 +66,7 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 auth.signInWithEmailAndPassword(email, password).await()
-                _authSuccess.value = true
+                _loginSuccess.value = true
             } catch (e: Exception) {
                 _errorMessage.value = e.message
             }
@@ -43,7 +75,13 @@ class AuthViewModel : ViewModel() {
 
     fun logout() {
         auth.signOut()
-        _authSuccess.value = false
+        _loginSuccess.value = false
+        _signUpSuccess.value = false
+    }
+
+    fun clearNavigationFlags() {
+        _loginSuccess.value = false
+        _signUpSuccess.value = false
     }
 
     fun clearError() {

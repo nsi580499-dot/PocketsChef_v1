@@ -60,12 +60,13 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     val authViewModel: AuthViewModel = viewModel()
-    val authSuccess by authViewModel.authSuccess.collectAsState()
+    val loginSuccess by authViewModel.loginSuccess.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
 
-    LaunchedEffect(authSuccess) {
-        if (authSuccess) {
+    LaunchedEffect(loginSuccess) {
+        if (loginSuccess) {
             onLoginSuccess()
+            authViewModel.clearNavigationFlags()
         }
     }
 
@@ -184,12 +185,13 @@ fun SignUpScreen(
     var confirmPassword by remember { mutableStateOf("") }
 
     val authViewModel: AuthViewModel = viewModel()
-    val authSuccess by authViewModel.authSuccess.collectAsState()
+    val signUpSuccess by authViewModel.signUpSuccess.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
 
-    LaunchedEffect(authSuccess) {
-        if (authSuccess) {
+    LaunchedEffect(signUpSuccess) {
+        if (signUpSuccess) {
             onSignUpSuccess()
+            authViewModel.clearNavigationFlags()
         }
     }
 
@@ -285,7 +287,9 @@ fun SignUpScreen(
 
         Button(
             onClick = {
-                authViewModel.signUp(email.trim(), password)
+                if (password == confirmPassword) {
+                    authViewModel.signUp(email.trim(), password)
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()

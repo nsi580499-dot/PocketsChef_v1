@@ -22,6 +22,7 @@ sealed class NavGraph(
     data object Login   : NavGraph("login",   "Login",   Icons.Default.Person)
     data object Signup  : NavGraph("signup",  "Signup",  Icons.Default.Person)
     data object CookAI  : NavGraph("cookai",  "CookAI",  Icons.Default.Psychology)
+    data object CompleteProfile : NavGraph("complete_profile", "Complete Profile", Icons.Default.Person)
 
     // Detailed screens
     data object RecipeDetail : NavGraph("recipe_detail/{recipeId}", "Recipe Detail", Icons.Default.Book) {

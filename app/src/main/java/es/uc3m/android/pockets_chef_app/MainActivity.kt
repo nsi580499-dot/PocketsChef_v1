@@ -51,23 +51,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PocketsChefApp() {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
-    
-    val startDestination = if (authViewModel.isUserLoggedIn()) {
-        NavGraph.Home.route
-    } else {
-        NavGraph.Login.route
-    }
+
+    val startDestination = NavGraph.Login.route
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute != null && 
-                        currentRoute != NavGraph.Login.route && 
-                        currentRoute != NavGraph.Signup.route &&
-                        currentRoute != NavGraph.CookAI.route &&
-                        currentRoute != NavGraph.RecipeDetail.route &&
-                        !currentRoute.startsWith("cooking_steps")
+    val showBottomBar = currentRoute != null &&
+            currentRoute != NavGraph.Login.route &&
+            currentRoute != NavGraph.Signup.route &&
+            currentRoute != NavGraph.CompleteProfile.route &&
+            currentRoute != NavGraph.CookAI.route &&
+            currentRoute != NavGraph.RecipeDetail.route &&
+            !currentRoute.startsWith("cooking_steps")
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -132,11 +128,20 @@ fun PocketsChefNavHost(
             )
         }
 
+        composable(NavGraph.CompleteProfile.route) {
+            CompleteProfileScreen(
+                onProfileCompleted = {
+                    navController.navigate(NavGraph.Home.route) {
+                        popUpTo(NavGraph.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
-                    // Volvemos a Home tras el registro ya que quitamos CompleteProfile
-                    navController.navigate(NavGraph.Home.route) {
+                    navController.navigate(NavGraph.CompleteProfile.route) {
                         popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }
                 },
