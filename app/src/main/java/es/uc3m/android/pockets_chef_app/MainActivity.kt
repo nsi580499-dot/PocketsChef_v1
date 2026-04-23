@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -22,7 +21,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import es.uc3m.android.pockets_chef_app.data.util.DatabasePopulator
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.navigation.bottomNavItems
 import es.uc3m.android.pockets_chef_app.ui.screens.*
@@ -70,7 +68,8 @@ fun PocketsChefApp() {
                         currentRoute != NavGraph.CookAI.route &&
                         !currentRoute.startsWith("recipe_detail") &&
                         !currentRoute.startsWith("cooking_steps") &&
-                        !currentRoute.startsWith("other_chef")
+                        !currentRoute.startsWith("other_chef") &&
+                        currentRoute != NavGraph.EditProfile.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -138,7 +137,8 @@ fun PocketsChefNavHost(
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
-                    navController.navigate(NavGraph.Home.route) {
+                    // Navigate to Edit Profile after signing up for the first time
+                    navController.navigate(NavGraph.EditProfile.route) {
                         popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }
                 },
@@ -154,6 +154,7 @@ fun PocketsChefNavHost(
         composable(NavGraph.Map.route)     { MapScreen(navController) }
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
+        composable(NavGraph.EditProfile.route) { EditProfileScreen(navController) }
 
         composable(
             route = NavGraph.RecipeDetail.route,

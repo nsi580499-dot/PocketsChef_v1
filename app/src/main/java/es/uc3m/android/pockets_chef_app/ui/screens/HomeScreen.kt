@@ -45,6 +45,7 @@ fun HomeScreen(
 ) {
     val scrollState = rememberScrollState()
     val otherChefs by homeViewModel.otherChefs.collectAsState()
+    val expiringCount by homeViewModel.expiringItemsCount.collectAsState()
 
     Column(
         modifier = Modifier
@@ -132,14 +133,26 @@ fun HomeScreen(
                 icon = Icons.AutoMirrored.Filled.MenuBook,
                 modifier = Modifier.weight(1f),
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                onClick = { navController.navigate(NavGraph.Recipes.route) }
+                onClick = { 
+                    navController.navigate(NavGraph.Recipes.route) {
+                        popUpTo(NavGraph.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
             EnhancedActionCard(
                 label = stringResource(R.string.my_pantry),
                 icon = Icons.Default.Inventory,
                 modifier = Modifier.weight(1f),
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = { navController.navigate(NavGraph.Pantry.route) }
+                onClick = { 
+                    navController.navigate(NavGraph.Pantry.route) {
+                        popUpTo(NavGraph.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
 
@@ -207,31 +220,49 @@ fun HomeScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 4.dp),
+                .padding(horizontal = 20.dp, vertical = 4.dp)
+                .clickable { 
+                    navController.navigate(NavGraph.Pantry.route) {
+                        popUpTo(NavGraph.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                containerColor = if (expiringCount > 0) 
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                else 
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
             ),
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
-            )
+            border = if (expiringCount > 0) {
+                androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                )
+            } else null
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Warning,
+                    imageVector = if (expiringCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = if (expiringCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = stringResource(R.string.pantry_btn),
+                    text = if (expiringCount > 0) 
+                        stringResource(R.string.items_expiring_soon_msg, expiringCount)
+                    else 
+                        stringResource(R.string.no_items_expiring_msg),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = if (expiringCount > 0) 
+                        MaterialTheme.colorScheme.onErrorContainer 
+                    else 
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

@@ -35,6 +35,8 @@ sealed class NavGraph(
     data object OtherChefProfile : NavGraph("other_chef/{userId}", "Chef Profile", Icons.Default.Person) {
         fun createRoute(userId: String) = "other_chef/$userId"
     }
+
+    data object EditProfile : NavGraph("edit_profile", "Edit Profile", Icons.Default.Person)
 }
 
 val bottomNavItems = listOf(

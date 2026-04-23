@@ -23,24 +23,35 @@ class OtherChefViewModel(
     private val _chefRecipes = MutableStateFlow<List<Recipe>>(emptyList())
     val chefRecipes: StateFlow<List<Recipe>> = _chefRecipes.asStateFlow()
 
-    fun loadChef(userId: String) {
+    private val _isFollowing = MutableStateFlow(false)
+    val isFollowing: StateFlow<Boolean> = _isFollowing.asStateFlow()
+
+    fun loadChef(myUid: String, userId: String) {
         viewModelScope.launch {
             val result = userRepository.getUserProfile(userId)
             if (result.isSuccess) {
                 _chefProfile.value = result.getOrNull()
             }
-            // In a real app, we'd have a recipeRepository.getRecipesByAuthor(userId)
-            // For now, we filter from all recipes
+            
+            // Observe following status
+            userRepository.isFollowingFlow(myUid, userId).collectLatest {
+                _isFollowing.value = it
+            }
+        }
+        
+        viewModelScope.launch {
             recipeRepository.getLatestPublicRecipes().collectLatest { allRecipes ->
                 _chefRecipes.value = allRecipes.filter { it.authorId == userId }
             }
         }
     }
 
-    fun followChef(myUid: String, targetUid: String) {
+    fun toggleFollow(myUid: String, targetUid: String) {
         viewModelScope.launch {
-            userRepository.followUser(myUid, targetUid)
-            // Reload profile to update counts
+            val currentStatus = _isFollowing.value
+            userRepository.toggleFollowUser(myUid, targetUid, currentStatus)
+            // Profile counts will be updated when the profile document changes in Firestore if we add snapshots
+            // For now, reload manually
             val result = userRepository.getUserProfile(targetUid)
             if (result.isSuccess) {
                 _chefProfile.value = result.getOrNull()

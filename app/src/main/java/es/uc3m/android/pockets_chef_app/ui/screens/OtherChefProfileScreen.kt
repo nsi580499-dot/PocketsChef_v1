@@ -38,10 +38,13 @@ fun OtherChefProfileScreen(
 ) {
     val chef by viewModel.chefProfile.collectAsState()
     val recipes by viewModel.chefRecipes.collectAsState()
+    val isFollowing by viewModel.isFollowing.collectAsState()
     val myUid = authViewModel.getCurrentUserUid() ?: ""
 
-    LaunchedEffect(userId) {
-        viewModel.loadChef(userId)
+    LaunchedEffect(userId, myUid) {
+        if (myUid.isNotEmpty()) {
+            viewModel.loadChef(myUid, userId)
+        }
     }
 
     Scaffold(
@@ -127,18 +130,30 @@ fun OtherChefProfileScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // Follow Button
+                        // Toggle Follow Button
                         Button(
-                            onClick = { viewModel.followChef(myUid, userId) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.onPrimary,
-                                contentColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = RoundedCornerShape(24.dp)
+                            onClick = { viewModel.toggleFollow(myUid, userId) },
+                            colors = if (isFollowing) {
+                                ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            shape = RoundedCornerShape(24.dp),
+                            border = if (isFollowing) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary) else null
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(
+                                imageVector = if (isFollowing) Icons.Default.Check else Icons.Default.Add, 
+                                contentDescription = null, 
+                                modifier = Modifier.size(18.dp)
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Follow Chef")
+                            Text(if (isFollowing) "Following" else "Follow Chef")
                         }
                     }
                 }

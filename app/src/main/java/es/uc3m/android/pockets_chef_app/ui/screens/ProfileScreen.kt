@@ -1,6 +1,7 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import es.uc3m.android.pockets_chef_app.R
+import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
@@ -41,7 +43,7 @@ fun ProfileScreen(
 
     LaunchedEffect(myUid) {
         if (myUid.isNotEmpty()) {
-            otherChefViewModel.loadChef(myUid)
+            otherChefViewModel.loadChef(myUid, myUid)
         }
     }
 
@@ -68,7 +70,10 @@ fun ProfileScreen(
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(contentAlignment = Alignment.BottomEnd) {
+                Box(
+                    contentAlignment = Alignment.BottomEnd,
+                    modifier = Modifier.clickable { navController.navigate(NavGraph.EditProfile.route) }
+                ) {
                     Surface(
                         modifier = Modifier
                             .size(100.dp)
@@ -126,6 +131,20 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Edit Profile Button
+            Button(
+                onClick = { navController.navigate(NavGraph.EditProfile.route) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Edit Profile Information")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // About Me
             ProfileSectionTitle(stringResource(R.string.about_me_section))
             Text(
@@ -152,7 +171,7 @@ fun ProfileScreen(
                 levels.forEach { (level, resId) ->
                     FilterChip(
                         selected = currentLevel == level,
-                        onClick = { /* TODO: Update level in Firestore */ },
+                        onClick = { /* Level update handled in Edit Screen */ },
                         label = { Text(stringResource(resId)) },
                         leadingIcon = if (currentLevel == level) {
                             { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }

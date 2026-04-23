@@ -101,4 +101,8 @@
     <string name="start_cooking">Start Cooking!</string>
     <string name="back">Back</string>
     <string name="home">Home</string>
+
+    <!-- Home Screen -->
+    <string name="items_expiring_soon_msg">You have %1$d items expiring soon!</string>
+    <string name="no_items_expiring_msg">Your pantry is looking fresh! No items expiring soon.</string>
 </resources>

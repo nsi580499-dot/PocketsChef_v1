@@ -11,11 +11,10 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,7 +35,13 @@ fun RecipeDetailScreen(
     recipeId: String,
     viewModel: RecipeViewModel = viewModel()
 ) {
-    val recipe = viewModel.getRecipeById(recipeId)
+    // Observamos el estado de las recetas
+    val recipesList by viewModel.recipesState.collectAsState()
+    
+    // Buscamos la receta en la lista actual
+    val recipe = remember(recipesList, recipeId) {
+        recipesList.find { it.id == recipeId }
+    }
 
     Scaffold(
         topBar = {
@@ -66,8 +71,13 @@ fun RecipeDetailScreen(
         }
     ) { innerPadding ->
         if (recipe == null) {
+            // Si la receta no se encuentra (puede estar cargando), mostramos un loader
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
+                if (recipesList.isEmpty()) {
+                    CircularProgressIndicator()
+                } else {
+                    Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
+                }
             }
         } else {
             Column(

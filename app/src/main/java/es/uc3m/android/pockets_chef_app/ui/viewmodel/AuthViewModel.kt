@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class AuthViewModel(private val userRepository: UserRepository = UserRepository()) : ViewModel() {
+class AuthViewModel(val userRepository: UserRepository = UserRepository()) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
 
