@@ -14,8 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,7 +32,7 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 @Composable
 fun CookingStepsScreen(
     navController: NavController,
-    recipeId: Int,
+    recipeId: String,
     viewModel: RecipeViewModel = viewModel()
 ) {
     val recipe = viewModel.getRecipeById(recipeId)
@@ -139,7 +137,7 @@ fun CookingStepsScreen(
 
                 // Progress Indicator
                 LinearProgressIndicator(
-                    progress = (currentStepIndex + 1).toFloat() / recipe.steps.size,
+                    progress = { (currentStepIndex + 1).toFloat() / recipe.steps.size },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
@@ -199,5 +197,5 @@ fun CookingStepsScreen(
 @Preview(showBackground = true)
 @Composable
 fun CookingStepsScreenPreview() {
-    PocketsChefTheme { CookingStepsScreen(rememberNavController(), 1) }
+    PocketsChefTheme { CookingStepsScreen(rememberNavController(), "1") }
 }

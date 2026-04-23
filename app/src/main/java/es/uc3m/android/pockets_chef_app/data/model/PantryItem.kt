@@ -1,5 +1,7 @@
 package es.uc3m.android.pockets_chef_app.data.model
 
+import com.google.firebase.firestore.PropertyName
+
 data class PantryItem(
     val id: String = "",
     val userId: String = "",
@@ -8,5 +10,7 @@ data class PantryItem(
     val unit: String = "",
     val category: String = "",
     val expiryDate: Long = 0L,
-    val isExpiringSoon: Boolean = false
+    @get:PropertyName("isExpiringSoon")
+    @set:PropertyName("isExpiringSoon")
+    var isExpiringSoon: Boolean = false
 )

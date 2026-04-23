@@ -1,192 +1,199 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import es.uc3m.android.pockets_chef_app.R
+import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
+import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    otherChefViewModel: OtherChefViewModel = viewModel()
 ) {
+    val scrollState = rememberScrollState()
+    val myUid = authViewModel.getCurrentUserUid() ?: ""
+    val userProfile by otherChefViewModel.chefProfile.collectAsState()
+    val myRecipes by otherChefViewModel.chefRecipes.collectAsState()
 
-    // 🔹 Datos estáticos (como antes)
-    val name = "Chef Mario"
-    val email = "chef.mario@pocketschef.com"
-    val description = "Passionate home chef who loves Italian cuisine."
-    val age = "25"
-    val level = "Intermediate"
-    val diet = listOf("Vegetarian", "Low Carb")
-    val allergies = listOf("Peanuts")
-    val favoriteCuisine = "Italian"
+    LaunchedEffect(myUid) {
+        if (myUid.isNotEmpty()) {
+            otherChefViewModel.loadChef(myUid)
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(scrollState)
     ) {
-
-        // 🔹 Header
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        // Elegant Header with Profile Info
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
+                )
+                .padding(top = 48.dp, bottom = 32.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    Surface(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = stringResource(R.string.profile_icon_desc),
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(20.dp)
+                        )
+                    }
+                    Surface(
+                        modifier = Modifier.size(32.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        tonalElevation = 4.dp
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.padding(6.dp).size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = userProfile?.displayName ?: "Chef",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Text(
+                    text = userProfile?.email ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                )
+            }
+        }
+
+        Column(modifier = Modifier.padding(20.dp)) {
+            
+            // Stats Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = name.first().uppercase(),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                ProfileStat(stringResource(R.string.stats_recipes_cooked), myRecipes.size.toString())
+                VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
+                ProfileStat("Followers", userProfile?.followersCount?.toString() ?: "0")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // About Me
+            ProfileSectionTitle(stringResource(R.string.about_me_section))
+            Text(
+                text = userProfile?.bio?.ifEmpty { stringResource(R.string.chef_bio_placeholder) } ?: stringResource(R.string.chef_bio_placeholder),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Cooking Level
+            ProfileSectionTitle(stringResource(R.string.cooking_level_section))
+            val currentLevel = userProfile?.cookingLevel ?: "Beginner"
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val levels = listOf(
+                    "Beginner" to R.string.cooking_level_beginner,
+                    "Intermediate" to R.string.cooking_level_intermediate,
+                    "Pro Chef" to R.string.cooking_level_pro
+                )
+                levels.forEach { (level, resId) ->
+                    FilterChip(
+                        selected = currentLevel == level,
+                        onClick = { /* TODO: Update level in Firestore */ },
+                        label = { Text(stringResource(resId)) },
+                        leadingIcon = if (currentLevel == level) {
+                            { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
+                        } else null
                     )
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = email,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
-        }
 
-        ProfileInfoCard("Description", description)
-        ProfileInfoCard("Age", age)
-        ProfileInfoCard("Level", level)
-        ProfileInfoCard("Favourite cuisine", favoriteCuisine)
+            Spacer(modifier = Modifier.height(24.dp))
 
-        ProfileChipsCard("Diet preferences", diet)
-        ProfileChipsCard("Allergies", allergies)
-
-        Button(
-            onClick = {
-                authViewModel.logout()
-                navController.navigate("login") {
-                    popUpTo(0)
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors()
-        ) {
-            Text("Log out")
-        }
-    }
-}
-
-@Composable
-private fun ProfileInfoCard(
-    title: String,
-    content: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = content,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProfileChipsCard(
-    title: String,
-    items: List<String>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            if (items.isEmpty()) {
-                Text("No data")
-            } else {
-                ChipsRow(items)
+            // Logout Button
+            Button(
+                onClick = {
+                    authViewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo(0)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Log out")
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-private fun ChipsRow(items: List<String>) {
-    androidx.compose.foundation.layout.FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items.forEach { item ->
-            AssistChip(
-                onClick = {},
-                label = { Text(item) }
-            )
-        }
-    }
+fun ProfileSectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileScreenPreview() {
+    PocketsChefTheme { ProfileScreen(navController = rememberNavController()) }
 }

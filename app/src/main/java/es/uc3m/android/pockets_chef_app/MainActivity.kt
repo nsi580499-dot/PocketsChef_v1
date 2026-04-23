@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -21,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import es.uc3m.android.pockets_chef_app.data.util.DatabasePopulator
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.navigation.bottomNavItems
 import es.uc3m.android.pockets_chef_app.ui.screens.*
@@ -66,8 +68,9 @@ fun PocketsChefApp() {
                         currentRoute != NavGraph.Login.route && 
                         currentRoute != NavGraph.Signup.route &&
                         currentRoute != NavGraph.CookAI.route &&
-                        currentRoute != NavGraph.RecipeDetail.route &&
-                        !currentRoute.startsWith("cooking_steps")
+                        !currentRoute.startsWith("recipe_detail") &&
+                        !currentRoute.startsWith("cooking_steps") &&
+                        !currentRoute.startsWith("other_chef")
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -135,7 +138,6 @@ fun PocketsChefNavHost(
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
-                    // Volvemos a Home tras el registro ya que quitamos CompleteProfile
                     navController.navigate(NavGraph.Home.route) {
                         popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }
@@ -155,18 +157,26 @@ fun PocketsChefNavHost(
 
         composable(
             route = NavGraph.RecipeDetail.route,
-            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
+            val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
             RecipeDetailScreen(navController, recipeId)
         }
 
         composable(
             route = NavGraph.CookingSteps.route,
-            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
+            val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
             CookingStepsScreen(navController, recipeId)
+        }
+
+        composable(
+            route = NavGraph.OtherChefProfile.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            OtherChefProfileScreen(navController, userId)
         }
     }
 }

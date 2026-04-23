@@ -1,23 +1,36 @@
 package es.uc3m.android.pockets_chef_app.data.model
 
+import com.google.firebase.firestore.PropertyName
+import com.google.firebase.firestore.ServerTimestamp
+import java.util.Date
+
 data class Ingredient(
-    val name: String,
-    val amount: String
+    val name: String = "",
+    val amount: String = ""
 )
 
 data class RecipeStep(
-    val order: Int,
-    val description: String
+    val order: Int = 0,
+    val description: String = ""
 )
 
 data class Recipe(
-    val id: Int = 0,
-    val title: String,
-    val description: String,
-    val duration: String,
-    val servings: Int,
-    val category: String,
-    val ingredients: List<Ingredient>,
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val duration: String = "",
+    val servings: Int = 0,
+    val category: String = "",
+    val ingredients: List<Ingredient> = emptyList(),
     val steps: List<RecipeStep> = emptyList(),
-    val isFavorite: Boolean = false
+    @get:PropertyName("isFavorite")
+    @set:PropertyName("isFavorite")
+    var isFavorite: Boolean = false, // Local-only or temporarily mapped
+    val authorId: String = "",
+    val authorName: String = "",
+    @get:PropertyName("isPublic")
+    @set:PropertyName("isPublic")
+    var isPublic: Boolean = true,
+    @ServerTimestamp
+    val createdAt: Date? = null
 )

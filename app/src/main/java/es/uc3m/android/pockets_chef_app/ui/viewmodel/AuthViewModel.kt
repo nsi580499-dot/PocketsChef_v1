@@ -3,13 +3,15 @@ package es.uc3m.android.pockets_chef_app.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import es.uc3m.android.pockets_chef_app.data.model.User
+import es.uc3m.android.pockets_chef_app.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(private val userRepository: UserRepository = UserRepository()) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
 
@@ -19,11 +21,22 @@ class AuthViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    fun signUp(email: String, password: String) {
+    fun signUp(email: String, password: String, displayName: String = "") {
         viewModelScope.launch {
             try {
-                auth.createUserWithEmailAndPassword(email, password).await()
-                _authSuccess.value = true
+                val result = auth.createUserWithEmailAndPassword(email, password).await()
+                val firebaseUser = result.user
+                
+                if (firebaseUser != null) {
+                    // Create User profile in Firestore
+                    val newUser = User(
+                        uid = firebaseUser.uid,
+                        email = email,
+                        displayName = displayName.ifBlank { email.substringBefore("@") }
+                    )
+                    userRepository.createUserProfile(newUser)
+                    _authSuccess.value = true
+                }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
             }
@@ -53,4 +66,6 @@ class AuthViewModel : ViewModel() {
     fun isUserLoggedIn(): Boolean {
         return auth.currentUser != null
     }
+    
+    fun getCurrentUserUid(): String? = auth.currentUser?.uid
 }

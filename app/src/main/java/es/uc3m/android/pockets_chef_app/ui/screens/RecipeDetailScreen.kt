@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +33,7 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 @Composable
 fun RecipeDetailScreen(
     navController: NavController,
-    recipeId: Int,
+    recipeId: String,
     viewModel: RecipeViewModel = viewModel()
 ) {
     val recipe = viewModel.getRecipeById(recipeId)
@@ -213,5 +214,5 @@ fun IngredientRow(name: String, amount: String) {
 @Preview(showBackground = true)
 @Composable
 fun RecipeDetailScreenPreview() {
-    PocketsChefTheme { RecipeDetailScreen(navController = rememberNavController(), recipeId = 1) }
+    PocketsChefTheme { RecipeDetailScreen(navController = rememberNavController(), recipeId = "1") }
 }
