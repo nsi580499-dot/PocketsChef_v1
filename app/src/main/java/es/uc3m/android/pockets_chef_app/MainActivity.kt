@@ -69,7 +69,8 @@ fun PocketsChefApp() {
                         !currentRoute.startsWith("recipe_detail") &&
                         !currentRoute.startsWith("cooking_steps") &&
                         !currentRoute.startsWith("other_chef") &&
-                        currentRoute != NavGraph.EditProfile.route
+                        currentRoute != NavGraph.EditProfile.route &&
+                        currentRoute != NavGraph.CreateRecipe.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -155,6 +156,7 @@ fun PocketsChefNavHost(
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
         composable(NavGraph.EditProfile.route) { EditProfileScreen(navController) }
+        composable(NavGraph.CreateRecipe.route) { CreateRecipeScreen(navController) }
 
         composable(
             route = NavGraph.RecipeDetail.route,

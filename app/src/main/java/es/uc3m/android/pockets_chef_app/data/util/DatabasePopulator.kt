@@ -113,7 +113,7 @@ class DatabasePopulator(
             )
         )
 
-        mockRecipes.forEach { recipeRepository.createRecipe(it) }
+        mockRecipes.forEach { recipeRepository.createRecipeForUser(it, it.authorId)}
 
         // 3. Populate Pantry for the current User
         val mockPantry = listOf(

@@ -60,16 +60,15 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     val authViewModel: AuthViewModel = viewModel()
-    val loginSuccess by authViewModel.loginSuccess.collectAsState()
+    val authSuccess by authViewModel.authSuccess.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
 
-    LaunchedEffect(loginSuccess) {
-        if (loginSuccess) {
+    LaunchedEffect(authSuccess) {
+        if (authSuccess) {
             onLoginSuccess()
             authViewModel.clearNavigationFlags()
         }
     }
-
 
     Column(
         modifier = Modifier
@@ -145,7 +144,6 @@ fun LoginScreen(
             onClick = {
                 authViewModel.login(email.trim(), password)
             },
-
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
@@ -161,7 +159,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = it,
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
             )
         }
 
@@ -185,16 +184,15 @@ fun SignUpScreen(
     var confirmPassword by remember { mutableStateOf("") }
 
     val authViewModel: AuthViewModel = viewModel()
-    val signUpSuccess by authViewModel.signUpSuccess.collectAsState()
+    val authSuccess by authViewModel.authSuccess.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
 
-    LaunchedEffect(signUpSuccess) {
-        if (signUpSuccess) {
+    LaunchedEffect(authSuccess) {
+        if (authSuccess) {
             onSignUpSuccess()
             authViewModel.clearNavigationFlags()
         }
     }
-
 
     Column(
         modifier = Modifier
@@ -287,8 +285,14 @@ fun SignUpScreen(
 
         Button(
             onClick = {
-                if (password == confirmPassword) {
-                    authViewModel.signUp(email.trim(), password)
+                when {
+                    email.isBlank() -> authViewModel.clearError()
+                    password != confirmPassword -> {
+                        authViewModel.clearError()
+                    }
+                    else -> {
+                        authViewModel.signUp(email.trim(), password)
+                    }
                 }
             },
             modifier = Modifier
@@ -301,7 +305,6 @@ fun SignUpScreen(
                 style = MaterialTheme.typography.titleMedium
             )
         }
-
 
         if (password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -328,21 +331,5 @@ fun SignUpScreen(
         }
 
         Spacer(modifier = Modifier.height(48.dp))
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun SignupPreview() {
-    MaterialTheme {
-        SignUpScreen(onSignUpSuccess = {}, onNavigateToLogin = {})
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun LoginPreview() {
-    MaterialTheme {
-        LoginScreen(onLoginSuccess = {}, onNavigateToSignUp = {})
     }
 }

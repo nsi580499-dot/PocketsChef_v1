@@ -1,5 +1,6 @@
 package es.uc3m.android.pockets_chef_app.data.repository
 
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.dataObjects
 import com.google.firebase.firestore.toObject
@@ -10,12 +11,23 @@ import kotlinx.coroutines.tasks.await
 class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.getInstance()) {
 
     private val recipeCollection = db.collection("recipes")
+    private val usersCollection = db.collection("users")
 
-    suspend fun createRecipe(recipe: Recipe): Result<String> = try {
+    suspend fun createRecipeForUser(recipe: Recipe, userId: String): Result<String> = try {
         val docRef = recipeCollection.document()
-        val recipeWithId = recipe.copy(id = docRef.id)
-        docRef.set(recipeWithId).await()
-        Result.success(docRef.id)
+        val recipeId = docRef.id
+        val recipeWithId = recipe.copy(id = recipeId)
+
+        val batch = db.batch()
+        batch.set(docRef, recipeWithId)
+        batch.update(
+            usersCollection.document(userId),
+            "myRecipeIds",
+            FieldValue.arrayUnion(recipeId)
+        )
+        batch.commit().await()
+
+        Result.success(recipeId)
     } catch (e: Exception) {
         Result.failure(e)
     }
@@ -27,14 +39,15 @@ class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
         Result.failure(e)
     }
 
-    /**
-     * Devuelve las recetas públicas. 
-     * Hemos quitado el orderBy de Firestore para evitar errores de índice 
-     * y asegurar que carguen siempre.
-     */
     fun getLatestPublicRecipes(): Flow<List<Recipe>> {
         return recipeCollection
             .whereEqualTo("isPublic", true)
+            .dataObjects<Recipe>()
+    }
+
+    fun getRecipesByAuthor(authorId: String): Flow<List<Recipe>> {
+        return recipeCollection
+            .whereEqualTo("authorId", authorId)
             .dataObjects<Recipe>()
     }
 }

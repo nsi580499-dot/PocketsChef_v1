@@ -28,7 +28,6 @@ class AuthViewModel(val userRepository: UserRepository = UserRepository()) : Vie
                 val firebaseUser = result.user
                 
                 if (firebaseUser != null) {
-                    // Create User profile in Firestore
                     val newUser = User(
                         uid = firebaseUser.uid,
                         email = email,
@@ -68,4 +67,8 @@ class AuthViewModel(val userRepository: UserRepository = UserRepository()) : Vie
     }
     
     fun getCurrentUserUid(): String? = auth.currentUser?.uid
+
+    fun clearNavigationFlags() {
+        _authSuccess.value = false
+    }
 }

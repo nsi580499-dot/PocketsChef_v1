@@ -12,7 +12,7 @@ data class User(
     val cookingLevel: String = "Beginner",
     val dietaryPreferences: List<String> = emptyList(),
     val favoriteCuisine: String = "",
-    val recipesCooked: Int = 0,
+    val myRecipeIds: List<String> = emptyList(),
     val followersCount: Int = 0,
     val followingCount: Int = 0
 )

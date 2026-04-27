@@ -29,38 +29,35 @@ import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
+import androidx.compose.material.icons.filled.Add
 
 @Composable
 fun RecipesScreen(
     navController: NavController,
     viewModel: RecipeViewModel = viewModel()
 ) {
-    // Observamos las recetas directamente del StateFlow del ViewModel
     val recipesList by viewModel.recipesState.collectAsState()
 
-    // Filtramos localmente para respuesta inmediata en la UI
     val displayedRecipes = remember(recipesList, viewModel.showFavoritesOnly, viewModel.searchQuery) {
         val base = if (viewModel.showFavoritesOnly) recipesList.filter { it.isFavorite } else recipesList
         if (viewModel.searchQuery.isBlank()) base
         else base.filter { it.title.contains(viewModel.searchQuery, ignoreCase = true) }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-
-        // Elegant Unified Header
-        Box(
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(NavGraph.CreateRecipe.route) },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add recipe")
+            }
+        }
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
-                )
-                .padding(horizontal = 24.dp, vertical = 32.dp)
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
             Column {
                 Text(
@@ -149,4 +146,6 @@ fun RecipesScreen(
 @Composable
 fun RecipesScreenPreview() {
     PocketsChefTheme { RecipesScreen(navController = rememberNavController()) }
+
 }
+

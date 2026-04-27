@@ -29,6 +29,8 @@ import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
+import androidx.compose.material.icons.filled.Add
+import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
 
 @Composable
 fun ProfileScreen(
@@ -124,7 +126,7 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                ProfileStat(stringResource(R.string.stats_recipes_cooked), myRecipes.size.toString())
+                ProfileStat("My recipes", myRecipes.size.toString())
                 VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
                 ProfileStat("Followers", userProfile?.followersCount?.toString() ?: "0")
             }
@@ -177,6 +179,34 @@ fun ProfileScreen(
                             { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                         } else null
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ProfileSectionTitle("My recipes")
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (myRecipes.isEmpty()) {
+                Text(
+                    text = "You haven't published any recipes yet.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    myRecipes.forEach { recipe ->
+                        es.uc3m.android.pockets_chef_app.ui.components.RecipeCard(
+                            recipe = recipe,
+                            onFavoriteToggle = { },
+                            onClick = {
+                                navController.navigate(NavGraph.RecipeDetail.createRoute(recipe.id))
+                            }
+                        )
+                    }
                 }
             }
 
