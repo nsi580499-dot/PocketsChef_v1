@@ -191,7 +191,7 @@ fun PocketsChefNavHost(
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
         composable(NavGraph.EditProfile.route) { EditProfileScreen(navController) }
-
+        composable(NavGraph.CreateRecipe.route) { CreateRecipeScreen(navController) }
         composable(
             route = NavGraph.RecipeDetail.route,
             arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
