@@ -42,6 +42,7 @@ fun OtherChefProfileScreen(
     val recipes by viewModel.chefRecipes.collectAsState()
     val isFollowing by viewModel.isFollowing.collectAsState()
     val myUid = authViewModel.getCurrentUserUid() ?: ""
+    val isOwnProfile = myUid == userId
 
     LaunchedEffect(userId, myUid) {
         if (myUid.isNotEmpty()) {
@@ -125,29 +126,35 @@ fun OtherChefProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         // Toggle Follow Button
-                        Button(
-                            onClick = { viewModel.toggleFollow(myUid, userId) },
-                            colors = if (isFollowing) {
-                                ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
-                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                        if (!isOwnProfile) {
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = { viewModel.toggleFollow(myUid, userId) },
+                                colors = if (isFollowing) {
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.onPrimary,
+                                        contentColor = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                shape = RoundedCornerShape(24.dp),
+                                border = if (isFollowing) {
+                                    androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary)
+                                } else null
+                            ) {
+                                Icon(
+                                    imageVector = if (isFollowing) Icons.Default.Check else Icons.Default.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
                                 )
-                            } else {
-                                ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onPrimary,
-                                    contentColor = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            shape = RoundedCornerShape(24.dp),
-                            border = if (isFollowing) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary) else null
-                        ) {
-                            Icon(
-                                imageVector = if (isFollowing) Icons.Default.Check else Icons.Default.Add, 
-                                contentDescription = null, 
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (isFollowing) "Following" else "Follow Chef")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(if (isFollowing) "Following" else "Follow Chef")
+                            }
                         }
                     }
                 }

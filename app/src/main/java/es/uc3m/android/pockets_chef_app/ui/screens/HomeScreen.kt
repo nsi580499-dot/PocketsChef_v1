@@ -115,7 +115,9 @@ fun HomeScreen(
         ) {
             items(otherChefs) { chef ->
                 ChefAvatarItem(chef = chef) {
-                    navController.navigate(NavGraph.OtherChefProfile.createRoute(chef.uid))
+                    if (chef.uid.isNotBlank()) {
+                        navController.navigate(NavGraph.OtherChefProfile.createRoute(chef.uid))
+                    }
                 }
             }
         }

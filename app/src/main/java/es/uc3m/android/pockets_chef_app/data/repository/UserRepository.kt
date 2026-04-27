@@ -38,30 +38,38 @@ class UserRepository(private val db: FirebaseFirestore = FirebaseFirestore.getIn
         Result.failure(e)
     }
 
-    suspend fun toggleFollowUser(myUid: String, targetUid: String, isFollowing: Boolean): Result<Unit> = try {
-        val batch = db.batch()
-        
-        val followingRef = usersCollection.document(myUid).collection("following").document(targetUid)
-        val followersRef = usersCollection.document(targetUid).collection("followers").document(myUid)
-        
-        if (isFollowing) {
-            // Unfollow
-            batch.delete(followingRef)
-            batch.delete(followersRef)
-            batch.update(usersCollection.document(myUid), "followingCount", com.google.firebase.firestore.FieldValue.increment(-1))
-            batch.update(usersCollection.document(targetUid), "followersCount", com.google.firebase.firestore.FieldValue.increment(-1))
-        } else {
-            // Follow
-            batch.set(followingRef, mapOf("followedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()))
-            batch.set(followersRef, mapOf("followedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()))
-            batch.update(usersCollection.document(myUid), "followingCount", com.google.firebase.firestore.FieldValue.increment(1))
-            batch.update(usersCollection.document(targetUid), "followersCount", com.google.firebase.firestore.FieldValue.increment(1))
+    suspend fun toggleFollowUser(
+        myUid: String,
+        targetUid: String,
+        isCurrentlyFollowing: Boolean
+    ): Result<Unit> {
+        return try {
+            if (myUid == targetUid) {
+                return Result.success(Unit)
+            }
+
+            val batch = db.batch()
+            val followingRef = usersCollection.document(myUid).collection("following").document(targetUid)
+            val followersRef = usersCollection.document(targetUid).collection("followers").document(myUid)
+
+            if (isCurrentlyFollowing) {
+                batch.delete(followingRef)
+                batch.delete(followersRef)
+                batch.update(usersCollection.document(myUid), "followingCount", com.google.firebase.firestore.FieldValue.increment(-1))
+                batch.update(usersCollection.document(targetUid), "followersCount", com.google.firebase.firestore.FieldValue.increment(-1))
+            } else {
+                batch.set(followingRef, mapOf("followedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()))
+                batch.set(followersRef, mapOf("followedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()))
+                batch.update(usersCollection.document(myUid), "followingCount", com.google.firebase.firestore.FieldValue.increment(1))
+                batch.update(usersCollection.document(targetUid), "followersCount", com.google.firebase.firestore.FieldValue.increment(1))
+            }
+
+            batch.commit().await()
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-        
-        batch.commit().await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     fun isFollowingFlow(myUid: String, targetUid: String): Flow<Boolean> {

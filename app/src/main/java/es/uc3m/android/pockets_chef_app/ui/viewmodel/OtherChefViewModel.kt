@@ -34,8 +34,27 @@ class OtherChefViewModel(
             }
             
             // Observe following status
-            userRepository.isFollowingFlow(myUid, userId).collectLatest {
-                _isFollowing.value = it
+            fun loadChef(myUid: String, userId: String) {
+                viewModelScope.launch {
+                    val result = userRepository.getUserProfile(userId)
+                    if (result.isSuccess) {
+                        _chefProfile.value = result.getOrNull()
+                    }
+
+                    if (myUid == userId) {
+                        _isFollowing.value = false
+                    } else {
+                        userRepository.isFollowingFlow(myUid, userId).collectLatest {
+                            _isFollowing.value = it
+                        }
+                    }
+                }
+
+                viewModelScope.launch {
+                    recipeRepository.getLatestPublicRecipes().collectLatest { allRecipes ->
+                        _chefRecipes.value = allRecipes.filter { it.authorId == userId }
+                    }
+                }
             }
         }
         
@@ -47,11 +66,11 @@ class OtherChefViewModel(
     }
 
     fun toggleFollow(myUid: String, targetUid: String) {
+        if (myUid == targetUid) return
+
         viewModelScope.launch {
             val currentStatus = _isFollowing.value
             userRepository.toggleFollowUser(myUid, targetUid, currentStatus)
-            // Profile counts will be updated when the profile document changes in Firestore if we add snapshots
-            // For now, reload manually
             val result = userRepository.getUserProfile(targetUid)
             if (result.isSuccess) {
                 _chefProfile.value = result.getOrNull()

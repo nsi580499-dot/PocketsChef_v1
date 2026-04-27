@@ -32,9 +32,11 @@ class HomeViewModel(
     }
 
     private fun loadOtherChefs() {
+        val myUid = auth.currentUser?.uid ?: return
+
         viewModelScope.launch {
             userRepository.getAllUsersFlow().collectLatest { users ->
-                _otherChefs.value = users
+                _otherChefs.value = users.filter { it.uid != myUid }
             }
         }
     }
