@@ -51,19 +51,25 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PocketsChefApp() {
     val navController = rememberNavController()
-
-    val startDestination = NavGraph.Login.route
+    val authViewModel: AuthViewModel = viewModel()
+    
+    val startDestination = if (authViewModel.isUserLoggedIn()) {
+        NavGraph.Home.route
+    } else {
+        NavGraph.Login.route
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute != null &&
-            currentRoute != NavGraph.Login.route &&
-            currentRoute != NavGraph.Signup.route &&
-            currentRoute != NavGraph.CompleteProfile.route &&
-            currentRoute != NavGraph.CookAI.route &&
-            currentRoute != NavGraph.RecipeDetail.route &&
-            !currentRoute.startsWith("cooking_steps")
+    val showBottomBar = currentRoute != null && 
+                        currentRoute != NavGraph.Login.route && 
+                        currentRoute != NavGraph.Signup.route &&
+                        currentRoute != NavGraph.CookAI.route &&
+                        !currentRoute.startsWith("recipe_detail") &&
+                        !currentRoute.startsWith("cooking_steps") &&
+                        !currentRoute.startsWith("other_chef") &&
+                        currentRoute != NavGraph.EditProfile.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -128,20 +134,11 @@ fun PocketsChefNavHost(
             )
         }
 
-        composable(NavGraph.CompleteProfile.route) {
-            CompleteProfileScreen(
-                onProfileCompleted = {
-                    navController.navigate(NavGraph.Home.route) {
-                        popUpTo(NavGraph.Login.route) { inclusive = true }
-                    }
-                }
-            )
-        }
-
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
-                    navController.navigate(NavGraph.CompleteProfile.route) {
+                    // Navigate to Edit Profile after signing up for the first time
+                    navController.navigate(NavGraph.EditProfile.route) {
                         popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }
                 },
@@ -157,21 +154,30 @@ fun PocketsChefNavHost(
         composable(NavGraph.Map.route)     { MapScreen(navController) }
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
+        composable(NavGraph.EditProfile.route) { EditProfileScreen(navController) }
 
         composable(
             route = NavGraph.RecipeDetail.route,
-            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
+            val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
             RecipeDetailScreen(navController, recipeId)
         }
 
         composable(
             route = NavGraph.CookingSteps.route,
-            arguments = listOf(navArgument("recipeId") { type = NavType.IntType })
+            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val recipeId = backStackEntry.arguments?.getInt("recipeId") ?: 0
+            val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
             CookingStepsScreen(navController, recipeId)
+        }
+
+        composable(
+            route = NavGraph.OtherChefProfile.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            OtherChefProfileScreen(navController, userId)
         }
     }
 }

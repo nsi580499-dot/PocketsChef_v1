@@ -1,7 +1,10 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,8 +14,11 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -21,16 +27,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import es.uc3m.android.pockets_chef_app.R
+import es.uc3m.android.pockets_chef_app.data.model.User
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.theme.CardPrimary
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    homeViewModel: HomeViewModel = viewModel()
+) {
     val scrollState = rememberScrollState()
+    val otherChefs by homeViewModel.otherChefs.collectAsState()
+    val expiringCount by homeViewModel.expiringItemsCount.collectAsState()
 
     Column(
         modifier = Modifier
@@ -89,6 +104,22 @@ fun HomeScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Social Section: Other Chefs
+        SectionHeader("Discover Other Chefs")
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(otherChefs) { chef ->
+                ChefAvatarItem(chef = chef) {
+                    navController.navigate(NavGraph.OtherChefProfile.createRoute(chef.uid))
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Quick Actions Section
         SectionHeader(stringResource(R.string.quick_actions))
         Row(
@@ -102,14 +133,26 @@ fun HomeScreen(navController: NavController) {
                 icon = Icons.AutoMirrored.Filled.MenuBook,
                 modifier = Modifier.weight(1f),
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                onClick = { navController.navigate(NavGraph.Recipes.route) }
+                onClick = { 
+                    navController.navigate(NavGraph.Recipes.route) {
+                        popUpTo(NavGraph.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
             EnhancedActionCard(
                 label = stringResource(R.string.my_pantry),
                 icon = Icons.Default.Inventory,
                 modifier = Modifier.weight(1f),
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = { navController.navigate(NavGraph.Pantry.route) }
+                onClick = { 
+                    navController.navigate(NavGraph.Pantry.route) {
+                        popUpTo(NavGraph.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
 
@@ -177,36 +220,93 @@ fun HomeScreen(navController: NavController) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 4.dp),
+                .padding(horizontal = 20.dp, vertical = 4.dp)
+                .clickable { 
+                    navController.navigate(NavGraph.Pantry.route) {
+                        popUpTo(NavGraph.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                containerColor = if (expiringCount > 0) 
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                else 
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
             ),
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
-            )
+            border = if (expiringCount > 0) {
+                androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                )
+            } else null
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Warning,
+                    imageVector = if (expiringCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = if (expiringCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = stringResource(R.string.pantry_btn),
+                    text = if (expiringCount > 0) 
+                        stringResource(R.string.items_expiring_soon_msg, expiringCount)
+                    else 
+                        stringResource(R.string.no_items_expiring_msg),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = if (expiringCount > 0) 
+                        MaterialTheme.colorScheme.onErrorContainer 
+                    else 
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun ChefAvatarItem(chef: User, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(80.dp)
+            .clickable { onClick() }
+    ) {
+        Surface(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                modifier = Modifier.padding(12.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = chef.displayName,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = chef.cookingLevel,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 10.sp
+        )
     }
 }
 

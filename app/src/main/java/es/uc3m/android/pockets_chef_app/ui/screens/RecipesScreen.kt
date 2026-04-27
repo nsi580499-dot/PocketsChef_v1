@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
+import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 
@@ -34,6 +35,16 @@ fun RecipesScreen(
     navController: NavController,
     viewModel: RecipeViewModel = viewModel()
 ) {
+    // Observamos las recetas directamente del StateFlow del ViewModel
+    val recipesList by viewModel.recipesState.collectAsState()
+
+    // Filtramos localmente para respuesta inmediata en la UI
+    val displayedRecipes = remember(recipesList, viewModel.showFavoritesOnly, viewModel.searchQuery) {
+        val base = if (viewModel.showFavoritesOnly) recipesList.filter { it.isFavorite } else recipesList
+        if (viewModel.searchQuery.isBlank()) base
+        else base.filter { it.title.contains(viewModel.searchQuery, ignoreCase = true) }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
 
         // Elegant Unified Header
@@ -100,14 +111,19 @@ fun RecipesScreen(
             )
         }
 
-        if (viewModel.recipes.isEmpty()) {
+        if (displayedRecipes.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = if (viewModel.showFavoritesOnly) stringResource(R.string.no_favorites_message) 
-                           else stringResource(R.string.no_recipes_found_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
+                // Si la lista está realmente vacía (no hay nada en Firestore)
+                if (recipesList.isEmpty()) {
+                    CircularProgressIndicator()
+                } else {
+                    Text(
+                        text = if (viewModel.showFavoritesOnly) stringResource(R.string.no_favorites_message) 
+                               else stringResource(R.string.no_recipes_found_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
             }
         } else {
             LazyColumn(
@@ -115,7 +131,7 @@ fun RecipesScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(viewModel.recipes, key = { it.id }) { recipe ->
+                items(displayedRecipes, key = { it.id }) { recipe ->
                     RecipeCard(
                         recipe = recipe,
                         onFavoriteToggle = { viewModel.toggleFavorite(recipe) },
@@ -124,54 +140,6 @@ fun RecipesScreen(
                         }
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun RecipeCard(recipe: Recipe, onFavoriteToggle: () -> Unit, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = recipe.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.recipe_duration_servings, recipe.duration, recipe.servings),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                SuggestionChip(
-                    onClick = {},
-                    label = { Text(recipe.category, style = MaterialTheme.typography.labelSmall) },
-                    shape = RoundedCornerShape(8.dp)
-                )
-            }
-            IconButton(onClick = onFavoriteToggle) {
-                Icon(
-                    imageVector = if (recipe.isFavorite) Icons.Default.Favorite
-                                  else Icons.Default.FavoriteBorder,
-                    contentDescription = stringResource(R.string.toggle_favorite_desc),
-                    tint = if (recipe.isFavorite) MaterialTheme.colorScheme.primary
-                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                )
             }
         }
     }

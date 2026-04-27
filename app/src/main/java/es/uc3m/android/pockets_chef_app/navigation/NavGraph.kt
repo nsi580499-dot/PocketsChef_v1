@@ -26,13 +26,18 @@ sealed class NavGraph(
 
     // Detailed screens
     data object RecipeDetail : NavGraph("recipe_detail/{recipeId}", "Recipe Detail", Icons.Default.Book) {
-        fun createRoute(recipeId: Int) = "recipe_detail/$recipeId"
+        fun createRoute(recipeId: String) = "recipe_detail/$recipeId"
     }
 
     data object CookingSteps : NavGraph("cooking_steps/{recipeId}", "Cooking Steps", Icons.Default.Book) {
-        fun createRoute(recipeId: Int) = "cooking_steps/$recipeId"
+        fun createRoute(recipeId: String) = "cooking_steps/$recipeId"
     }
 
+    data object OtherChefProfile : NavGraph("other_chef/{userId}", "Chef Profile", Icons.Default.Person) {
+        fun createRoute(userId: String) = "other_chef/$userId"
+    }
+
+    data object EditProfile : NavGraph("edit_profile", "Edit Profile", Icons.Default.Person)
 }
 
 val bottomNavItems = listOf(

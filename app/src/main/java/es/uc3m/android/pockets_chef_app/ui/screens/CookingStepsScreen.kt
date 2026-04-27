@@ -14,8 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,10 +32,15 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 @Composable
 fun CookingStepsScreen(
     navController: NavController,
-    recipeId: Int,
+    recipeId: String,
     viewModel: RecipeViewModel = viewModel()
 ) {
-    val recipe = viewModel.getRecipeById(recipeId)
+    val recipesList by viewModel.recipesState.collectAsState()
+    
+    val recipe = remember(recipesList, recipeId) {
+        recipesList.find { it.id == recipeId }
+    }
+    
     var currentStepIndex by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -67,7 +70,15 @@ fun CookingStepsScreen(
             )
         }
     ) { innerPadding ->
-        if (recipe == null || recipe.steps.isEmpty()) {
+        if (recipe == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                if (recipesList.isEmpty()) {
+                    CircularProgressIndicator()
+                } else {
+                    Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        } else if (recipe.steps.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "Steps not available", style = MaterialTheme.typography.bodyLarge)
             }
@@ -105,11 +116,13 @@ fun CookingStepsScreen(
                 Column(
                     modifier = Modifier
                         .weight(1f)
+                        .fillMaxWidth() // <--- SOLUCIÓN: Ocupar todo el ancho
                         .padding(24.dp)
                         .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center // <--- Centrar verticalmente también
                 ) {
-                    // Step Indicator (e.g., Step 1)
+                    // Step Indicator
                     Surface(
                         color = MaterialTheme.colorScheme.primary,
                         shape = RoundedCornerShape(12.dp)
@@ -123,13 +136,14 @@ fun CookingStepsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(48.dp))
 
                     // Step Description
                     Text(
                         text = step.description,
+                        modifier = Modifier.fillMaxWidth(), // <--- SOLUCIÓN: Asegurar ancho para TextAlign
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            lineHeight = 32.sp
+                            lineHeight = 36.sp
                         ),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium,
@@ -139,7 +153,7 @@ fun CookingStepsScreen(
 
                 // Progress Indicator
                 LinearProgressIndicator(
-                    progress = (currentStepIndex + 1).toFloat() / recipe.steps.size,
+                    progress = { (currentStepIndex + 1).toFloat() / recipe.steps.size },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
@@ -154,7 +168,6 @@ fun CookingStepsScreen(
                         .padding(24.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Previous Button
                     OutlinedButton(
                         onClick = { if (currentStepIndex > 0) currentStepIndex-- },
                         enabled = currentStepIndex > 0,
@@ -168,7 +181,6 @@ fun CookingStepsScreen(
 
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    // Next/Finish Button
                     Button(
                         onClick = {
                             if (currentStepIndex < recipe.steps.size - 1) {
@@ -199,5 +211,5 @@ fun CookingStepsScreen(
 @Preview(showBackground = true)
 @Composable
 fun CookingStepsScreenPreview() {
-    PocketsChefTheme { CookingStepsScreen(rememberNavController(), 1) }
+    PocketsChefTheme { CookingStepsScreen(rememberNavController(), "1") }
 }
