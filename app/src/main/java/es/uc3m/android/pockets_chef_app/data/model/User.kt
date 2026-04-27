@@ -14,5 +14,6 @@ data class User(
     val favoriteCuisine: String = "",
     val myRecipeIds: List<String> = emptyList(),
     val followersCount: Int = 0,
-    val followingCount: Int = 0
+    val followingCount: Int = 0,
+    val profileCompleted: Boolean = false
 )

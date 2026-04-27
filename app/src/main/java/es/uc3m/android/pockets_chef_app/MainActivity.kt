@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -26,10 +25,10 @@ import es.uc3m.android.pockets_chef_app.navigation.bottomNavItems
 import es.uc3m.android.pockets_chef_app.ui.screens.*
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         
         Log.d("PocketsChef", "MainActivity onCreate")
@@ -52,25 +51,51 @@ class MainActivity : ComponentActivity() {
 fun PocketsChefApp() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
-    
-    val startDestination = if (authViewModel.isUserLoggedIn()) {
-        NavGraph.Home.route
-    } else {
-        NavGraph.Login.route
+
+    val startDestinationState = androidx.compose.runtime.produceState<String?>(initialValue = null) {
+        val uid = authViewModel.getCurrentUserUid()
+
+        value = if (uid == null) {
+            NavGraph.Login.route
+        } else {
+            val result = authViewModel.userRepository.getUserProfile(uid)
+            val user = result.getOrNull()
+
+            if (user?.profileCompleted == true) {
+                NavGraph.Home.route
+            } else {
+                NavGraph.CompleteProfile.route
+            }
+        }
+    }
+
+    val startDestination = startDestinationState.value
+
+    if (startDestination == null) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.padding(32.dp)
+            )
+        }
+        return
     }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute != null && 
-                        currentRoute != NavGraph.Login.route && 
-                        currentRoute != NavGraph.Signup.route &&
-                        currentRoute != NavGraph.CookAI.route &&
-                        !currentRoute.startsWith("recipe_detail") &&
-                        !currentRoute.startsWith("cooking_steps") &&
-                        !currentRoute.startsWith("other_chef") &&
-                        currentRoute != NavGraph.EditProfile.route &&
-                        currentRoute != NavGraph.CreateRecipe.route
+    val showBottomBar = currentRoute != null &&
+            currentRoute != NavGraph.Login.route &&
+            currentRoute != NavGraph.Signup.route &&
+            currentRoute != NavGraph.CompleteProfile.route &&
+            currentRoute != NavGraph.CookAI.route &&
+            currentRoute != NavGraph.RecipeDetail.route &&
+            currentRoute != NavGraph.EditProfile.route &&
+            currentRoute != NavGraph.CreateRecipe.route &&
+            !currentRoute.startsWith("cooking_steps") &&
+            !currentRoute.startsWith("other_chef")
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -138,13 +163,23 @@ fun PocketsChefNavHost(
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
-                    // Navigate to Edit Profile after signing up for the first time
-                    navController.navigate(NavGraph.EditProfile.route) {
+                    // AQUÍ ESTÁ EL CAMBIO: Navegamos a Complete Profile tras el registro
+                    navController.navigate(NavGraph.CompleteProfile.route) {
                         popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }
                 },
                 onNavigateToLogin = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable(NavGraph.CompleteProfile.route) {
+            CompleteProfileScreen(
+                onProfileCompleted = {
+                    navController.navigate(NavGraph.Home.route) {
+                        popUpTo(NavGraph.CompleteProfile.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -156,7 +191,6 @@ fun PocketsChefNavHost(
         composable(NavGraph.Profile.route) { ProfileScreen(navController) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
         composable(NavGraph.EditProfile.route) { EditProfileScreen(navController) }
-        composable(NavGraph.CreateRecipe.route) { CreateRecipeScreen(navController) }
 
         composable(
             route = NavGraph.RecipeDetail.route,

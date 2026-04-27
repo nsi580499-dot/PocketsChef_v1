@@ -74,7 +74,8 @@ class UserProfileViewModel : ViewModel() {
                     favoriteCuisine = favoriteCuisine,
                     myRecipeIds = _profile.value.myRecipeIds,
                     followersCount = _profile.value.followersCount,
-                    followingCount = _profile.value.followingCount
+                    followingCount = _profile.value.followingCount,
+                    profileCompleted = true
                 )
 
                 firestore.collection("users")

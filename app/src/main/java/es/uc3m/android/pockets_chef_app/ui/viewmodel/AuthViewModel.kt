@@ -31,7 +31,8 @@ class AuthViewModel(val userRepository: UserRepository = UserRepository()) : Vie
                     val newUser = User(
                         uid = firebaseUser.uid,
                         email = email,
-                        displayName = displayName.ifBlank { email.substringBefore("@") }
+                        displayName = displayName.ifBlank { email.substringBefore("@") },
+                        profileCompleted = false
                     )
                     userRepository.createUserProfile(newUser)
                     _authSuccess.value = true
