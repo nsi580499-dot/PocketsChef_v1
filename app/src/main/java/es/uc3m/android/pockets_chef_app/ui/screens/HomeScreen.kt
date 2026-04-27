@@ -37,6 +37,8 @@ import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.theme.CardPrimary
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.HomeViewModel
+import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
+
 
 @Composable
 fun HomeScreen(
@@ -279,20 +281,11 @@ fun ChefAvatarItem(chef: User, onClick: () -> Unit) {
             .width(80.dp)
             .clickable { onClick() }
     ) {
-        Surface(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-            border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                modifier = Modifier.padding(12.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        UserAvatar(
+            profileImageUrl = chef.profileImageUrl,
+            modifier = Modifier.size(64.dp),
+            iconPadding = 12
+        )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = chef.displayName,

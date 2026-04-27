@@ -31,6 +31,7 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
 import androidx.compose.material.icons.filled.Add
 import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
+import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 
 @Composable
 fun ProfileScreen(
@@ -89,19 +90,11 @@ fun ProfileScreen(
                             modifier = Modifier.padding(20.dp)
                         )
                     }
-                    Surface(
-                        modifier = Modifier.size(32.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        tonalElevation = 4.dp
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = null,
-                            modifier = Modifier.padding(6.dp).size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
+                    UserAvatar(
+                        profileImageUrl = userProfile?.profileImageUrl,
+                        modifier = Modifier.size(100.dp),
+                        iconPadding = 20
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

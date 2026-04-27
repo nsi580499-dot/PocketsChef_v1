@@ -27,6 +27,8 @@ import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
 import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
+import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,19 +103,11 @@ fun OtherChefProfileScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(
-                            modifier = Modifier
-                                .size(90.dp)
-                                .clip(CircleShape),
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.padding(20.dp)
-                            )
-                        }
+                        UserAvatar(
+                            profileImageUrl = chef?.profileImageUrl,
+                            modifier = Modifier.size(90.dp),
+                            iconPadding = 20
+                        )
 
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(

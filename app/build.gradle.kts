@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.foundation)
+    implementation("io.coil-kt:coil-compose:2.6.0")
     
     // Google Maps
     implementation(libs.maps.compose)
