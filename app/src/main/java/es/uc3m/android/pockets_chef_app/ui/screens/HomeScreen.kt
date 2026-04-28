@@ -40,15 +40,29 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.HomeViewModel
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 import androidx.compose.foundation.layout.statusBarsPadding
 
-
 @Composable
 fun HomeScreen(
     navController: NavController,
     homeViewModel: HomeViewModel = viewModel()
 ) {
-    val scrollState = rememberScrollState()
+    // Collect state from ViewModel to pass it to the stateless Composable
     val otherChefs by homeViewModel.otherChefs.collectAsState()
     val expiringCount by homeViewModel.expiringItemsCount.collectAsState()
+
+    HomeScreen(
+        navController = navController,
+        otherChefs = otherChefs,
+        expiringCount = expiringCount
+    )
+}
+
+@Composable
+fun HomeScreen(
+    navController: NavController,
+    otherChefs: List<User>,
+    expiringCount: Int
+) {
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
@@ -361,5 +375,15 @@ fun EnhancedActionCard(
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    PocketsChefTheme { HomeScreen(navController = rememberNavController()) }
+    PocketsChefTheme {
+        HomeScreen(
+            navController = rememberNavController(),
+            otherChefs = listOf(
+                User(uid = "1", displayName = "Chef Mario", cookingLevel = "Expert"),
+                User(uid = "2", displayName = "Chef Julia", cookingLevel = "Intermediate"),
+                User(uid = "3", displayName = "Chef Gordon", cookingLevel = "Professional")
+            ),
+            expiringCount = 3
+        )
+    }
 }
