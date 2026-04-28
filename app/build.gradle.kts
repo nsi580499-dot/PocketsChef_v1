@@ -35,6 +35,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -84,5 +85,6 @@ dependencies {
 
     // Gemini
     implementation(libs.google.generativeai)
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
 }

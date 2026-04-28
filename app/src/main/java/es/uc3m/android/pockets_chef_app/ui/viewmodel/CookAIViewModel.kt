@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class CookAIViewModel(
-    private val chatRepository: ChatRepository,
+    private val chatRepository: ChatRepository = ChatRepository(),
     private val userRepository: UserRepository = UserRepository()
 ) : ViewModel() {
 
@@ -40,7 +40,9 @@ class CookAIViewModel(
                     generativeModel = chatRepository.createGenerativeModel(user)
                     _uiState.value = CookAIUiState.Ready
                     // Mensaje de bienvenida inicial
-                    messages.add(ChatMessage(role = "model", content = "¡Hola ${user.displayName}! Soy CookAI. ¿En qué puedo ayudarte hoy?"))
+                    if (messages.isEmpty()) {
+                        messages.add(ChatMessage(role = "model", content = "¡Hola ${user.displayName}! Soy CookAI. ¿En qué puedo ayudarte hoy?"))
+                    }
                 } else {
                     _uiState.value = CookAIUiState.Error("No se pudo cargar el perfil del usuario")
                 }

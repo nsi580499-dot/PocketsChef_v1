@@ -6,6 +6,7 @@ import com.google.ai.client.generativeai.type.content
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.dataObjects
+import es.uc3m.android.pockets_chef_app.BuildConfig
 import es.uc3m.android.pockets_chef_app.data.model.ChatMessage
 import es.uc3m.android.pockets_chef_app.data.model.ChatSession
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
@@ -16,7 +17,7 @@ import kotlinx.coroutines.tasks.await
 
 class ChatRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val apiKey: String = "GEMINI_API_KEY" // Should be provided via BuildConfig or a secure way
+    private val apiKey: String = BuildConfig.GEMINI_API_KEY
 ) {
 
     private val chatCollection = db.collection("chat_sessions")
@@ -40,11 +41,11 @@ class ChatRepository(
             2. Adapt your explanations to the user's ${user.cookingLevel} level.
             3. Take their dietary preferences into account.
             4. If the context includes recipes from the database, use them to provide accurate answers.
-            
+            5. Be concise in your answers.
             """.trimIndent()
 
         return GenerativeModel(
-            modelName = "gemini-1.5-flash",
+            modelName = "gemini-3-flash-preview",
             apiKey = apiKey,
             systemInstruction = content { text(systemInstruction) }
         )
