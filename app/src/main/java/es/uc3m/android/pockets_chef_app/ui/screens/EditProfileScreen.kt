@@ -1,221 +1,208 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import android.util.Patterns
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import es.uc3m.android.pockets_chef_app.R
-import es.uc3m.android.pockets_chef_app.data.model.User
-import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
-import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
-import kotlinx.coroutines.launch
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
+import es.uc3m.android.pockets_chef_app.ui.util.cookingLevels
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+private fun isValidPhotoUrl(url: String): Boolean {
+    return url.isBlank() || Patterns.WEB_URL.matcher(url).matches()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel(),
-    otherChefViewModel: OtherChefViewModel = viewModel()
+    viewModel: UserProfileViewModel = viewModel()
 ) {
-    val myUid = authViewModel.getCurrentUserUid() ?: ""
-    val userProfile by otherChefViewModel.chefProfile.collectAsState()
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val profile by viewModel.profile.collectAsState()
+    val saveSuccess by viewModel.saveSuccess.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var displayName by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
-    var cookingLevel by remember { mutableStateOf("Beginner") }
-    val dietaryPreferences = remember { mutableStateListOf<String>() }
+    var name by rememberSaveable { mutableStateOf("") }
+    var description by rememberSaveable { mutableStateOf("") }
+    var level by rememberSaveable { mutableStateOf("Beginner") }
+    var photoUrl by rememberSaveable { mutableStateOf("") }
+    var diet by rememberSaveable { mutableStateOf("") }
+    var favoriteCuisine by rememberSaveable { mutableStateOf("") }
 
-    val levels = listOf("Beginner", "Intermediate", "Pro Chef")
-    val availableDiets = listOf("Vegetarian", "Vegan", "Gluten-Free", "Keto", "Paleo", "Low Carb")
+    var levelExpanded by rememberSaveable { mutableStateOf(false) }
+    var hasInitialized by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(myUid) {
-        if (myUid.isNotEmpty()) {
-            otherChefViewModel.loadChef(myUid, myUid)
+    LaunchedEffect(profile) {
+        if (!hasInitialized && profile.uid.isNotBlank()) {
+            name = profile.displayName
+            description = profile.bio
+            level = profile.cookingLevel.ifBlank { "Beginner" }
+            photoUrl = profile.profileImageUrl
+            diet = profile.dietaryPreferences.joinToString(", ")
+            favoriteCuisine = profile.favoriteCuisine
+            hasInitialized = true
         }
     }
 
-    LaunchedEffect(userProfile) {
-        userProfile?.let {
-            displayName = it.displayName
-            bio = it.bio
-            cookingLevel = it.cookingLevel
-            dietaryPreferences.clear()
-            dietaryPreferences.addAll(it.dietaryPreferences)
+    LaunchedEffect(saveSuccess) {
+        if (saveSuccess) {
+            viewModel.clearSaveSuccess()
+            navController.popBackStack()
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit Profile") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        val updatedUser = userProfile?.copy(
-                            displayName = displayName,
-                            bio = bio,
-                            cookingLevel = cookingLevel,
-                            dietaryPreferences = dietaryPreferences.toList()
-                        )
-                        if (updatedUser != null) {
-                            scope.launch {
-                                val result = authViewModel.userRepository.updateUserProfile(updatedUser)
-                                if (result.isSuccess) {
-                                    navController.popBackStack()
-                                } else {
-                                    snackbarHostState.showSnackbar("Error updating profile")
-                                }
-                            }
-                        }
-                    }) {
-                        Icon(Icons.Default.Save, contentDescription = "Save")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    ) { innerPadding ->
+    val nameError = if (name.trim().isBlank()) "Name is required" else null
+    val descriptionError =
+        if (description.trim().length < 10) "Description must be at least 10 characters" else null
+    val photoUrlError =
+        if (!isValidPhotoUrl(photoUrl.trim())) "Enter a valid URL" else null
+
+    val isFormValid =
+        nameError == null &&
+                descriptionError == null &&
+                photoUrlError == null
+
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(20.dp)
+                .imePadding()
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header Styled Area
             Text(
-                text = "Personal Information",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                text = "Edit profile",
+                style = MaterialTheme.typography.headlineSmall
             )
 
             OutlinedTextField(
-                value = displayName,
-                onValueChange = { displayName = it },
-                label = { Text("Display Name") },
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                isError = nameError != null,
+                supportingText = { if (nameError != null) Text(nameError) }
             )
 
             OutlinedTextField(
-                value = bio,
-                onValueChange = { bio = it },
-                label = { Text("Bio") },
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                minLines = 3
+                minLines = 3,
+                isError = descriptionError != null,
+                supportingText = { if (descriptionError != null) Text(descriptionError) }
             )
 
-            HorizontalDivider()
-
-            Text(
-                text = "Cooking Journey",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ExposedDropdownMenuBox(
+                expanded = levelExpanded,
+                onExpandedChange = { levelExpanded = !levelExpanded }
             ) {
-                levels.forEach { level ->
-                    FilterChip(
-                        selected = cookingLevel == level,
-                        onClick = { cookingLevel = level },
-                        label = { Text(level) },
-                        leadingIcon = if (cookingLevel == level) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
-                        } else null
-                    )
+                OutlinedTextField(
+                    value = level,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Cooking level") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { levelExpanded = true }
+                )
+
+                ExposedDropdownMenu(
+                    expanded = levelExpanded,
+                    onDismissRequest = { levelExpanded = false }
+                ) {
+                    cookingLevels.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(item) },
+                            onClick = {
+                                level = item
+                                levelExpanded = false
+                            }
+                        )
+                    }
                 }
             }
 
-            HorizontalDivider()
-
-            Text(
-                text = "Dietary Preferences",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+            OutlinedTextField(
+                value = photoUrl,
+                onValueChange = { photoUrl = it },
+                label = { Text("Photo URL") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = photoUrlError != null,
+                supportingText = { if (photoUrlError != null) Text(photoUrlError) }
             )
 
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                availableDiets.forEach { diet ->
-                    val isSelected = dietaryPreferences.contains(diet)
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            if (isSelected) dietaryPreferences.remove(diet)
-                            else dietaryPreferences.add(diet)
-                        },
-                        label = { Text(diet) },
-                        leadingIcon = if (isSelected) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
-                        } else null
-                    )
-                }
-            }
+            OutlinedTextField(
+                value = diet,
+                onValueChange = { diet = it },
+                label = { Text("Diet preferences (comma separated)") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            OutlinedTextField(
+                value = favoriteCuisine,
+                onValueChange = { favoriteCuisine = it },
+                label = { Text("Favourite cuisine") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
 
             Button(
                 onClick = {
-                    val updatedUser = userProfile?.copy(
-                        displayName = displayName,
-                        bio = bio,
-                        cookingLevel = cookingLevel,
-                        dietaryPreferences = dietaryPreferences.toList()
-                    )
-                    if (updatedUser != null) {
-                        scope.launch {
-                            val result = authViewModel.userRepository.updateUserProfile(updatedUser)
-                            if (result.isSuccess) {
-                                navController.popBackStack()
-                            } else {
-                                snackbarHostState.showSnackbar("Error updating profile")
-                            }
-                        }
+                    if (isFormValid) {
+                        viewModel.saveProfile(
+                            name = name.trim(),
+                            description = description.trim(),
+                            level = level.trim(),
+                            photoUrl = photoUrl.trim(),
+                            diet = diet.split(",").map { it.trim() }.filter { it.isNotBlank() },
+                            favoriteCuisine = favoriteCuisine.trim()
+                        )
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isFormValid
             ) {
-                Icon(Icons.Default.Save, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Save Changes", fontWeight = FontWeight.Bold)
+                Text("Save changes")
             }
         }
     }

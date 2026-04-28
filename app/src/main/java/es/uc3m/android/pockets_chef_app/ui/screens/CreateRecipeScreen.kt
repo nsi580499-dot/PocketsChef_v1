@@ -1,5 +1,6 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,19 +39,26 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import es.uc3m.android.pockets_chef_app.data.model.Ingredient
 import es.uc3m.android.pockets_chef_app.data.model.RecipeStep
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
-import androidx.compose.runtime.saveable.rememberSaveable
+import es.uc3m.android.pockets_chef_app.ui.util.recipeCategories
 
 private const val MAX_INGREDIENTS = 20
 private const val MAX_STEPS = 15
+
+private val recipeCategories = listOf(
+    "Breakfast", "Main", "Dessert", "Snack", "Drink"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,19 +70,16 @@ fun CreateRecipeScreen(
     var description by rememberSaveable { mutableStateOf("") }
     var duration by rememberSaveable { mutableStateOf("") }
     var servings by rememberSaveable { mutableStateOf("1") }
-    var category by rememberSaveable { mutableStateOf("") }
+    var category by rememberSaveable { mutableStateOf("Breakfast") }
     var isPublic by rememberSaveable { mutableStateOf(true) }
+    var categoryExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val ingredients = rememberSaveable {
-        mutableStateListOf(
-            Ingredient("", "")
-        )
+    val ingredients = remember {
+        mutableStateListOf(Ingredient("", ""))
     }
 
-    val steps = rememberSaveable {
-        mutableStateListOf(
-            RecipeStep(1, "")
-        )
+    val steps = remember {
+        mutableStateListOf(RecipeStep(1, ""))
     }
 
     val createSuccess by viewModel.createRecipeSuccess.collectAsState()
@@ -83,6 +91,36 @@ fun CreateRecipeScreen(
             navController.popBackStack()
         }
     }
+
+    val cleanIngredients = ingredients.filter {
+        it.name.isNotBlank() && it.amount.isNotBlank()
+    }
+
+    val cleanSteps = steps.filter {
+        it.description.isNotBlank()
+    }.mapIndexed { index, item ->
+        item.copy(order = index + 1)
+    }
+
+    val titleError = if (title.trim().isBlank()) "Title is required" else null
+    val descriptionError =
+        if (description.trim().length < 10) "Description must be at least 10 characters" else null
+    val durationError = if (duration.trim().isBlank()) "Duration is required" else null
+    val servingsInt = servings.toIntOrNull()
+    val servingsError =
+        if (servingsInt == null || servingsInt < 1) "Servings must be at least 1" else null
+    val ingredientsError =
+        if (cleanIngredients.isEmpty()) "Add at least 1 complete ingredient" else null
+    val stepsError =
+        if (cleanSteps.isEmpty()) "Add at least 1 step" else null
+
+    val isFormValid =
+        titleError == null &&
+                descriptionError == null &&
+                durationError == null &&
+                servingsError == null &&
+                ingredientsError == null &&
+                stepsError == null
 
     Scaffold(
         topBar = {
@@ -115,7 +153,11 @@ fun CreateRecipeScreen(
                 onValueChange = { title = it },
                 label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = titleError != null,
+                supportingText = {
+                    if (titleError != null) Text(titleError)
+                }
             )
 
             OutlinedTextField(
@@ -123,7 +165,11 @@ fun CreateRecipeScreen(
                 onValueChange = { description = it },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                isError = descriptionError != null,
+                supportingText = {
+                    if (descriptionError != null) Text(descriptionError)
+                }
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -132,25 +178,59 @@ fun CreateRecipeScreen(
                     onValueChange = { duration = it },
                     label = { Text("Duration") },
                     modifier = Modifier.weight(1f),
-                    singleLine = true
+                    singleLine = true,
+                    isError = durationError != null,
+                    supportingText = {
+                        if (durationError != null) Text(durationError)
+                    }
                 )
 
                 OutlinedTextField(
                     value = servings,
-                    onValueChange = { servings = it },
+                    onValueChange = { servings = it.filter(Char::isDigit) },
                     label = { Text("Servings") },
                     modifier = Modifier.weight(1f),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = servingsError != null,
+                    supportingText = {
+                        if (servingsError != null) Text(servingsError)
+                    }
                 )
             }
 
-            OutlinedTextField(
-                value = category,
-                onValueChange = { category = it },
-                label = { Text("Category") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+            ExposedDropdownMenuBox(
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = !categoryExpanded }
+            ) {
+                OutlinedTextField(
+                    value = category,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Category") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { categoryExpanded = true }
+                )
+
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
+                ) {
+                    recipeCategories.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(item) },
+                            onClick = {
+                                category = item
+                                categoryExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Row {
                 Checkbox(
@@ -199,10 +279,15 @@ fun CreateRecipeScreen(
                 }
             }
 
+            if (ingredientsError != null) {
+                Text(
+                    text = ingredientsError,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             if (ingredients.size < MAX_INGREDIENTS) {
-                TextButton(
-                    onClick = { ingredients.add(Ingredient("", "")) }
-                ) {
+                TextButton(onClick = { ingredients.add(Ingredient("", "")) }) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Add ingredient")
@@ -244,10 +329,15 @@ fun CreateRecipeScreen(
                 }
             }
 
+            if (stepsError != null) {
+                Text(
+                    text = stepsError,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             if (steps.size < MAX_STEPS) {
-                TextButton(
-                    onClick = { steps.add(RecipeStep(steps.size + 1, "")) }
-                ) {
+                TextButton(onClick = { steps.add(RecipeStep(steps.size + 1, "")) }) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Add step")
@@ -265,28 +355,12 @@ fun CreateRecipeScreen(
 
             Button(
                 onClick = {
-                    val cleanIngredients = ingredients.filter {
-                        it.name.isNotBlank() && it.amount.isNotBlank()
-                    }
-                    val cleanSteps = steps.filter {
-                        it.description.isNotBlank()
-                    }.mapIndexed { index, item ->
-                        item.copy(order = index + 1)
-                    }
-
-                    if (
-                        title.isNotBlank() &&
-                        description.isNotBlank() &&
-                        duration.isNotBlank() &&
-                        category.isNotBlank() &&
-                        cleanIngredients.isNotEmpty() &&
-                        cleanSteps.isNotEmpty()
-                    ) {
+                    if (isFormValid) {
                         viewModel.createRecipe(
                             title = title.trim(),
                             description = description.trim(),
                             duration = duration.trim(),
-                            servings = servings.toIntOrNull() ?: 1,
+                            servings = servingsInt ?: 1,
                             category = category.trim(),
                             ingredients = cleanIngredients,
                             steps = cleanSteps,
@@ -294,7 +368,8 @@ fun CreateRecipeScreen(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isFormValid
             ) {
                 Text("Upload recipe")
             }

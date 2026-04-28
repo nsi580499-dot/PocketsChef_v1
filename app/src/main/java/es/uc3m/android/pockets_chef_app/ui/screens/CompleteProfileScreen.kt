@@ -1,5 +1,7 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
+import android.util.Patterns
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,9 +10,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -23,11 +28,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
+import es.uc3m.android.pockets_chef_app.ui.util.cookingLevels
 
+
+private fun isValidUrl(url: String): Boolean {
+    return url.isBlank() || Patterns.WEB_URL.matcher(url).matches()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompleteProfileScreen(
     onProfileCompleted: () -> Unit,
@@ -35,6 +46,7 @@ fun CompleteProfileScreen(
 ) {
     val saveSuccess by viewModel.saveSuccess.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val profile by viewModel.profile.collectAsState()
 
     var name by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
@@ -43,12 +55,38 @@ fun CompleteProfileScreen(
     var diet by rememberSaveable { mutableStateOf("") }
     var favoriteCuisine by rememberSaveable { mutableStateOf("") }
 
+    var levelExpanded by rememberSaveable { mutableStateOf(false) }
+    var hasInitialized by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(profile) {
+        if (!hasInitialized && profile.uid.isNotBlank()) {
+            name = profile.displayName
+            description = profile.bio
+            level = profile.cookingLevel.ifBlank { "Beginner" }
+            photoUrl = profile.profileImageUrl
+            diet = profile.dietaryPreferences.joinToString(", ")
+            favoriteCuisine = profile.favoriteCuisine
+            hasInitialized = true
+        }
+    }
+
     LaunchedEffect(saveSuccess) {
         if (saveSuccess) {
             viewModel.clearSaveSuccess()
             onProfileCompleted()
         }
     }
+
+    val nameError = if (name.trim().isBlank()) "Name is required" else null
+    val descriptionError =
+        if (description.trim().length < 10) "Description must be at least 10 characters" else null
+    val photoUrlError =
+        if (!isValidUrl(photoUrl.trim())) "Enter a valid URL" else null
+
+    val isFormValid =
+        nameError == null &&
+                descriptionError == null &&
+                photoUrlError == null
 
     Scaffold { innerPadding ->
         Column(
@@ -71,33 +109,69 @@ fun CompleteProfileScreen(
                 onValueChange = { name = it },
                 label = { Text("Name") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = nameError != null,
+                supportingText = {
+                    if (nameError != null) Text(nameError)
+                }
             )
-
 
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                isError = descriptionError != null,
+                supportingText = {
+                    if (descriptionError != null) Text(descriptionError)
+                }
             )
 
-            OutlinedTextField(
-                value = level,
-                onValueChange = { level = it },
-                label = { Text("Level") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+            ExposedDropdownMenuBox(
+                expanded = levelExpanded,
+                onExpandedChange = { levelExpanded = !levelExpanded }
+            ) {
+                OutlinedTextField(
+                    value = level,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Cooking level") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { levelExpanded = true }
+                )
+
+                ExposedDropdownMenu(
+                    expanded = levelExpanded,
+                    onDismissRequest = { levelExpanded = false }
+                ) {
+                    cookingLevels.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(item) },
+                            onClick = {
+                                level = item
+                                levelExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = photoUrl,
                 onValueChange = { photoUrl = it },
                 label = { Text("Photo URL") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = photoUrlError != null,
+                supportingText = {
+                    if (photoUrlError != null) Text(photoUrlError)
+                }
             )
-
 
             OutlinedTextField(
                 value = diet,
@@ -124,16 +198,19 @@ fun CompleteProfileScreen(
 
             Button(
                 onClick = {
-                    viewModel.saveProfile(
-                        name = name.trim(),
-                        description = description.trim(),
-                        level = level.trim(),
-                        photoUrl = photoUrl.trim(),
-                        diet = diet.split(",").map { it.trim() }.filter { it.isNotBlank() },
-                        favoriteCuisine = favoriteCuisine.trim()
-                    )
+                    if (isFormValid) {
+                        viewModel.saveProfile(
+                            name = name.trim(),
+                            description = description.trim(),
+                            level = level.trim(),
+                            photoUrl = photoUrl.trim(),
+                            diet = diet.split(",").map { it.trim() }.filter { it.isNotBlank() },
+                            favoriteCuisine = favoriteCuisine.trim()
+                        )
+                    }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isFormValid
             ) {
                 Text("Save profile")
             }
