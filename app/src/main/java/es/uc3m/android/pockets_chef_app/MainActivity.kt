@@ -20,19 +20,29 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.work.*
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.navigation.bottomNavItems
+import es.uc3m.android.pockets_chef_app.notifications.ExpiryWorker
+import es.uc3m.android.pockets_chef_app.notifications.NotificationHelper
 import es.uc3m.android.pockets_chef_app.ui.screens.*
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import androidx.compose.ui.unit.dp
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         Log.d("PocketsChef", "MainActivity onCreate")
-        
+
+        // Create notification channels
+        NotificationHelper.createNotificationChannels(this)
+
+        // Schedule daily expiry check with WorkManager
+        scheduleExpiryWorker()
+
         enableEdgeToEdge()
         setContent {
             PocketsChefTheme {
@@ -44,6 +54,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun scheduleExpiryWorker() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val expiryWorkRequest = PeriodicWorkRequestBuilder<ExpiryWorker>(
+            1, TimeUnit.DAYS
+        )
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            ExpiryWorker.TAG,
+            ExistingPeriodicWorkPolicy.KEEP,
+            expiryWorkRequest
+        )
     }
 }
 
@@ -163,7 +191,6 @@ fun PocketsChefNavHost(
         composable(NavGraph.Signup.route) {
             SignUpScreen(
                 onSignUpSuccess = {
-                    // AQUÍ ESTÁ EL CAMBIO: Navegamos a Complete Profile tras el registro
                     navController.navigate(NavGraph.CompleteProfile.route) {
                         popUpTo(NavGraph.Signup.route) { inclusive = true }
                     }

@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.foundation)
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.androidx.work.runtime.ktx)
     
     // Google Maps
     implementation(libs.maps.compose)
