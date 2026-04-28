@@ -14,7 +14,7 @@ appcompat = "1.6.1"
 foundation = "1.10.6"
 mapsCompose = "6.1.2"
 playServicesMaps = "19.0.0"
-playServicesMapsVersion = "20.0.0"
+playServicesLocation = "21.3.0"
 google-services = "4.4.4"
 firebaseBom = "34.10.0"
 
@@ -41,11 +41,10 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
-gms-play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMapsVersion" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
-
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
