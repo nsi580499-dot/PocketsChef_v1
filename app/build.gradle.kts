@@ -82,4 +82,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
+    // Gemini
+    implementation(libs.google.generativeai)
+
 }
