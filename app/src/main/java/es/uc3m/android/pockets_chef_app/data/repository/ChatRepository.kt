@@ -35,9 +35,11 @@ class ChatRepository(
             - Level: ${user.cookingLevel}
             - Preferences: ${user.dietaryPreferences.joinToString()}
             - Bio: ${user.bio}
+            - 
             
             Instructions:
             1. Be friendly and encouraging.
+            3. Answer in English.
             2. Adapt your explanations to the user's ${user.cookingLevel} level.
             3. Take their dietary preferences into account.
             4. If the context includes recipes from the database, use them to provide accurate answers.
@@ -45,7 +47,7 @@ class ChatRepository(
             """.trimIndent()
 
         return GenerativeModel(
-            modelName = "gemini-3-flash-preview",
+            modelName = "gemini-3.1-flash-lite-preview",
             apiKey = apiKey,
             systemInstruction = content { text(systemInstruction) }
         )
