@@ -1,16 +1,25 @@
 package es.uc3m.android.pockets_chef_app
 
+
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -20,30 +29,44 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.navigation.bottomNavItems
 import es.uc3m.android.pockets_chef_app.notifications.ExpiryWorker
 import es.uc3m.android.pockets_chef_app.notifications.NotificationHelper
-import es.uc3m.android.pockets_chef_app.ui.screens.*
+import es.uc3m.android.pockets_chef_app.ui.screens.CompleteProfileScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.CookAIScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.CookingStepsScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.CreateRecipeScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.EditProfileScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.HomeScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.LoginScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.MapScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.OtherChefProfileScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.PantryScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.ProfileScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.RecipeDetailScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.RecipesScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.SignUpScreen
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
-import androidx.compose.ui.unit.dp
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+
         Log.d("PocketsChef", "MainActivity onCreate")
 
-        // Create notification channels
         NotificationHelper.createNotificationChannels(this)
-
-        // Schedule daily expiry check with WorkManager
         scheduleExpiryWorker()
 
-        enableEdgeToEdge()
         setContent {
             PocketsChefTheme {
                 Surface(

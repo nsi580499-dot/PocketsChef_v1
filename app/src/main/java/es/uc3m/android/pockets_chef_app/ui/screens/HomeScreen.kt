@@ -38,6 +38,7 @@ import es.uc3m.android.pockets_chef_app.ui.theme.CardPrimary
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.HomeViewModel
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
+import androidx.compose.foundation.layout.statusBarsPadding
 
 
 @Composable
@@ -68,7 +69,8 @@ fun HomeScreen(
                     ),
                     shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
                 )
-                .padding(horizontal = 24.dp, vertical = 32.dp)
+                .statusBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
