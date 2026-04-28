@@ -17,6 +17,10 @@ class AuthViewModel(val userRepository: UserRepository = UserRepository()) : Vie
 
     private val _authSuccess = MutableStateFlow(false)
     val authSuccess: StateFlow<Boolean> = _authSuccess.asStateFlow()
+    
+    // Aliases for compatibility with screens
+    val loginSuccess: StateFlow<Boolean> = authSuccess
+    val signUpSuccess: StateFlow<Boolean> = authSuccess
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
@@ -62,14 +66,15 @@ class AuthViewModel(val userRepository: UserRepository = UserRepository()) : Vie
     fun clearError() {
         _errorMessage.value = null
     }
+    
+    fun clearNavigationFlags() {
+        _authSuccess.value = false
+        _errorMessage.value = null
+    }
 
     fun isUserLoggedIn(): Boolean {
         return auth.currentUser != null
     }
     
     fun getCurrentUserUid(): String? = auth.currentUser?.uid
-
-    fun clearNavigationFlags() {
-        _authSuccess.value = false
-    }
 }

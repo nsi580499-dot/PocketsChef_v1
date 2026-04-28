@@ -60,11 +60,11 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.foundation)
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.androidx.work.runtime.ktx)
     
     // Google Maps
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
-    implementation(libs.gms.play.services.maps)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -73,6 +73,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.play.services.location)
 
     // Firebase
     implementation(platform(libs.firebase.bom))

@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import es.uc3m.android.pockets_chef_app.notifications.NotificationHelper
 
 class PantryViewModel(private val repository: PantryRepository = PantryRepository()) : ViewModel() {
 
@@ -37,12 +41,24 @@ class PantryViewModel(private val repository: PantryRepository = PantryRepositor
         }
     }
 
-    fun addItem(item: PantryItem) {
+    fun addItem(item: PantryItem, context: Context) {
         val currentUser = auth.currentUser ?: return
         viewModelScope.launch {
             val result = repository.addItem(currentUser.uid, item)
             if (result.isFailure) {
                 _errorMessage.value = result.exceptionOrNull()?.message
+            } else {
+                // Fire notification immediately if expiring soon
+                val daysLeft = ((item.expiryDate - System.currentTimeMillis()) / (1000 * 60 * 60 * 24)).toInt()
+                if (daysLeft <= 2) {
+                    val hasPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (hasPermission) {
+                        NotificationHelper.sendExpiryNotification(context, item.name, daysLeft)
+                    }
+                }
             }
         }
     }

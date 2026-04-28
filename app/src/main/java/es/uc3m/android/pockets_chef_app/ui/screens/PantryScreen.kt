@@ -29,6 +29,11 @@ import es.uc3m.android.pockets_chef_app.ui.theme.ErrorRed
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.theme.WarningAmber
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.PantryViewModel
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import es.uc3m.android.pockets_chef_app.notifications.NotificationHelper
+import androidx.compose.ui.platform.LocalContext
 
 private data class CategoryInfo(val name: String, val resId: Int)
 
@@ -142,11 +147,13 @@ fun PantryScreen(
         }
     }
 
+    val context = LocalContext.current
+
     if (showAddDialog) {
         AddPantryItemDialog(
             onDismiss = { showAddDialog = false },
             onConfirm = { item ->
-                viewModel.addItem(item)
+                viewModel.addItem(item, context)
                 showAddDialog = false
             }
         )
@@ -304,3 +311,4 @@ fun formatExpiry(expiryMs: Long): String {
 fun PantryScreenPreview() {
     PocketsChefTheme { PantryScreen(navController = rememberNavController()) }
 }
+
