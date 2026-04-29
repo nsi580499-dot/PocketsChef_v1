@@ -19,12 +19,12 @@ class CookAIViewModel(
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
-    
+
     private val _uiState = MutableStateFlow<CookAIUiState>(CookAIUiState.Initial)
     val uiState = _uiState.asStateFlow()
 
     val messages = mutableStateListOf<ChatMessage>()
-    
+
     private var generativeModel: GenerativeModel? = null
 
     init {
@@ -33,21 +33,31 @@ class CookAIViewModel(
 
     private fun initializeCookAI() {
         val uid = auth.currentUser?.uid ?: return
+
         viewModelScope.launch {
             _uiState.value = CookAIUiState.Loading
+
             userRepository.getUserProfile(uid).onSuccess { user ->
                 if (user != null) {
                     generativeModel = chatRepository.createGenerativeModel(user)
                     _uiState.value = CookAIUiState.Ready
-                    // Mensaje de bienvenida inicial
+
+                    // Initial welcome message
                     if (messages.isEmpty()) {
-                        messages.add(ChatMessage(role = "model", content = "¡Hola ${user.displayName}! Soy CookAI. ¿En qué puedo ayudarte hoy?"))
+                        messages.add(
+                            ChatMessage(
+                                role = "model",
+                                content = "Hi ${user.displayName}! I'm CookAI. What can I help you with today?"
+                            )
+                        )
                     }
+
                 } else {
-                    _uiState.value = CookAIUiState.Error("No se pudo cargar el perfil del usuario")
+                    _uiState.value = CookAIUiState.Error("Failed to load user profile")
                 }
+
             }.onFailure {
-                _uiState.value = CookAIUiState.Error(it.message ?: "Error desconocido")
+                _uiState.value = CookAIUiState.Error(it.message ?: "Unknown error")
             }
         }
     }
@@ -56,27 +66,33 @@ class CookAIViewModel(
         val model = generativeModel ?: return
         if (text.isBlank()) return
 
-        // 1. Añadir mensaje del usuario a la UI
+        // 1. Add user message to UI
         messages.add(ChatMessage(role = "user", content = text))
-        
-        // 2. Preparar respuesta de la IA (vacía al inicio para el streaming)
+
+        // 2. Prepare AI response (empty at first for streaming)
         val aiMessageIndex = messages.size
         messages.add(ChatMessage(role = "model", content = ""))
 
         viewModelScope.launch {
             try {
-                // Convertir historial a formato Gemini
+                // Convert history to Gemini format
                 val history = messages.dropLast(1).map { msg ->
                     content(msg.role) { text(msg.content) }
                 }
 
                 var fullResponse = ""
+
                 chatRepository.sendMessageStream(model, history, text).collect { chunk ->
                     fullResponse += chunk
-                    messages[aiMessageIndex] = messages[aiMessageIndex].copy(content = fullResponse)
+                    messages[aiMessageIndex] =
+                        messages[aiMessageIndex].copy(content = fullResponse)
                 }
+
             } catch (e: Exception) {
-                messages[aiMessageIndex] = messages[aiMessageIndex].copy(content = "Lo siento, hubo un error: ${e.message}")
+                messages[aiMessageIndex] =
+                    messages[aiMessageIndex].copy(
+                        content = "Sorry, something went wrong: ${e.message}"
+                    )
             }
         }
     }

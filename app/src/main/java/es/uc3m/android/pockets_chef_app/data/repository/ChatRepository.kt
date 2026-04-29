@@ -24,27 +24,28 @@ class ChatRepository(
     private val recipeCollection = db.collection("recipes")
     private val usersCollection = db.collection("users")
 
-    // 1. Inicialización con Contexto (System Instruction)
+    // 1. Model initialization with system instruction
     fun createGenerativeModel(user: User): GenerativeModel {
         val systemInstruction = """
             You are CookAI, an expert cooking assistant for Pockets Chef.
             Your goal is to help the user cook in a simple and fun way.
-            
+
             User Information:
             - Name: ${user.displayName}
             - Level: ${user.cookingLevel}
             - Preferences: ${user.dietaryPreferences.joinToString()}
             - Bio: ${user.bio}
-            - 
-            
+
             Instructions:
-            1. Be friendly and encouraging.
-            3. Answer in English.
-            2. Adapt your explanations to the user's ${user.cookingLevel} level.
-            3. Take their dietary preferences into account.
-            4. If the context includes recipes from the database, use them to provide accurate answers.
-            5. Be concise in your answers.
-            """.trimIndent()
+            1. Always respond in English.
+            2. Do NOT use Spanish under any circumstances.
+            3. Do NOT start responses with greetings like "Hi" or "Hello".
+            4. Be friendly and encouraging.
+            5. Adapt explanations to the user's ${user.cookingLevel} level.
+            6. Respect dietary preferences.
+            7. If context includes recipes, use them.
+            8. Keep answers clear and concise.
+        """.trimIndent()
 
         return GenerativeModel(
             modelName = "gemini-3.1-flash-lite-preview",
@@ -53,55 +54,58 @@ class ChatRepository(
         )
     }
 
-    // 2. Retrieval: Simulación de búsqueda en Firestore
+    // 2. Retrieval from Firestore
     private suspend fun retrieveRelevantContext(queryText: String): String {
         return try {
-            // Simulación simple: buscamos recetas que coincidan con palabras clave del mensaje
             val recipes = recipeCollection
-                .whereArrayContainsAny("category", queryText.split(" ")) // Ejemplo de búsqueda
+                .whereArrayContainsAny("category", queryText.split(" "))
                 .limit(3)
                 .get()
                 .await()
                 .toObjects(Recipe::class.java)
 
-            if (recipes.isEmpty()) return "No se encontraron recetas específicas relacionadas."
+            if (recipes.isEmpty()) return "No relevant recipes were found."
 
-            val context = StringBuilder("Aquí hay información de recetas relevantes en Pockets Chef:\n")
+            val context = StringBuilder("Here is relevant recipe information from Pockets Chef:\n")
             recipes.forEach { recipe ->
-                context.append("- ${recipe.title}: ${recipe.description}. Ingredientes: ${recipe.ingredients.joinToString { it.name }}\n")
+                context.append(
+                    "- ${recipe.title}: ${recipe.description}. Ingredients: ${
+                        recipe.ingredients.joinToString { it.name }
+                    }\n"
+                )
             }
             context.toString()
+
         } catch (e: Exception) {
-            "Error recuperando contexto: ${e.message}"
+            "Error retrieving context: ${e.message}"
         }
     }
 
-    // 3. Lógica del Chat RAG con Streaming
+    // 3. Chat logic (RAG + streaming)
     fun sendMessageStream(
         generativeModel: GenerativeModel,
         history: List<Content>,
         userMessage: String
     ): Flow<String> = flow {
-        // A. Retrieval
+
         val context = retrieveRelevantContext(userMessage)
-        
-        // B. Augmentation: Combinar contexto + pregunta
+
         val augmentedPrompt = """
-            Contexto de la base de datos:
+            Database context:
             $context
-            
-            Pregunta del usuario:
+
+            User request:
             $userMessage
         """.trimIndent()
 
-        // C. Generation (Streaming)
         val chat = generativeModel.startChat(history)
+
         chat.sendMessageStream(augmentedPrompt).collect { response ->
             response.text?.let { emit(it) }
         }
     }
 
-    // Firebase methods for session management
+    // Firebase methods
     suspend fun startNewChatSession(userId: String, title: String): Result<String> = try {
         val docRef = chatCollection.document()
         val session = ChatSession(
@@ -119,7 +123,11 @@ class ChatRepository(
         val messageRef = chatCollection.document(sessionId).collection("messages").document()
         val messageWithId = message.copy(id = messageRef.id)
         messageRef.set(messageWithId).await()
-        chatCollection.document(sessionId).update("updatedAt", com.google.firebase.firestore.FieldValue.serverTimestamp()).await()
+
+        chatCollection.document(sessionId)
+            .update("updatedAt", com.google.firebase.firestore.FieldValue.serverTimestamp())
+            .await()
+
         Result.success(messageRef.id)
     } catch (e: Exception) {
         Result.failure(e)

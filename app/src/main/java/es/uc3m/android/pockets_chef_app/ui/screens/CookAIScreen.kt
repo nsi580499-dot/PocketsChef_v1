@@ -26,7 +26,6 @@ import es.uc3m.android.pockets_chef_app.data.model.ChatMessage
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.CookAIUiState
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.CookAIViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun CookAIScreen(
@@ -35,10 +34,9 @@ fun CookAIScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var inputText by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    // Auto-scroll to bottom when messages change
+    // Automatically scroll to the latest message
     LaunchedEffect(viewModel.messages.size) {
         if (viewModel.messages.isNotEmpty()) {
             listState.animateScrollToItem(viewModel.messages.size - 1)
@@ -131,7 +129,9 @@ fun CookAIScreenContent(
                         Text(
                             text = uiState.message,
                             color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(16.dp)
                         )
                     }
                     else -> {
@@ -197,10 +197,12 @@ fun CookAIScreenContent(
 fun ChatBubble(message: ChatMessage) {
     val isUser = message.role == "user"
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-    val containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer
-    else MaterialTheme.colorScheme.secondaryContainer
-    val contentColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer
-    else MaterialTheme.colorScheme.onSecondaryContainer
+    val containerColor =
+        if (isUser) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.secondaryContainer
+    val contentColor =
+        if (isUser) MaterialTheme.colorScheme.onPrimaryContainer
+        else MaterialTheme.colorScheme.onSecondaryContainer
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -232,11 +234,11 @@ fun CookAIScreenPreview() {
     PocketsChefTheme {
         CookAIScreenContent(
             messages = listOf(
-                ChatMessage(role = "model", content = "¡Hola! Soy CookAI. ¿En qué puedo ayudarte hoy?"),
-                ChatMessage(role = "user", content = "Quiero hacer una carbonara."),
-                ChatMessage(role = "model", content = "¡Excelente elección! ¿Tienes huevos y guanciale?")
+                ChatMessage(role = "model", content = "Hi! I'm CookAI. What can I help you with today?"),
+                ChatMessage(role = "user", content = "I want to make carbonara."),
+                ChatMessage(role = "model", content = "Great choice! Do you have eggs and guanciale?")
             ),
-            inputText = "Sí, los tengo.",
+            inputText = "Yes, I do.",
             uiState = CookAIUiState.Ready,
             onInputTextChange = {},
             onSendMessage = {},
