@@ -1,10 +1,7 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,40 +12,40 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.lottie.compose.*
 import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 
 @Composable
-fun ChefLogo(modifier: Modifier = Modifier) {
-    Box(
+fun ChefAnimation(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.chef_dancing)
+    )
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
         modifier = modifier
-            .wrapContentSize()
-            .padding(bottom = 24.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
-                .clip(CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(R.drawable.logo_pocketschef),
-                contentDescription = stringResource(R.string.logo_desc),
-                modifier = Modifier.size(100.dp)
-            )
-        }
-    }
+    )
+}
+
+@Composable
+fun ChefLogo(modifier: Modifier = Modifier) {
+    ChefAnimation(
+        modifier = modifier
+            .size(200.dp)
+            .padding(bottom = 8.dp)
+    )
 }
 
 @Composable
@@ -79,10 +76,9 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(48.dp))
-
-        ChefLogo()
+        ChefAnimation(modifier = Modifier.size(200.dp))
 
         Text(
             text = stringResource(R.string.welcome_back),
@@ -100,14 +96,9 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = {
-                Text(stringResource(R.string.email))
-            },
+            label = { Text(stringResource(R.string.email)) },
             leadingIcon = {
-                Icon(
-                    Icons.Default.Email,
-                    contentDescription = stringResource(R.string.email_icon_desc)
-                )
+                Icon(Icons.Default.Email, contentDescription = stringResource(R.string.email_icon_desc))
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -124,10 +115,7 @@ fun LoginScreen(
             onValueChange = { password = it },
             label = { Text(stringResource(R.string.password)) },
             leadingIcon = {
-                Icon(
-                    Icons.Default.Lock,
-                    contentDescription = stringResource(R.string.lock_icon_desc)
-                )
+                Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc))
             },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -141,18 +129,13 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = {
-                authViewModel.login(email.trim(), password)
-            },
+            onClick = { authViewModel.login(email.trim(), password) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(
-                stringResource(R.string.signin),
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(stringResource(R.string.signin), style = MaterialTheme.typography.titleMedium)
         }
 
         errorMessage?.let {
@@ -170,7 +153,7 @@ fun LoginScreen(
             Text(stringResource(R.string.no_account))
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -203,10 +186,9 @@ fun SignUpScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(48.dp))
-
-        ChefLogo()
+        ChefAnimation(modifier = Modifier.size(180.dp))
 
         Text(
             text = stringResource(R.string.create_account),
@@ -226,10 +208,7 @@ fun SignUpScreen(
             onValueChange = { email = it },
             label = { Text(stringResource(R.string.email)) },
             leadingIcon = {
-                Icon(
-                    Icons.Default.Email,
-                    contentDescription = stringResource(R.string.email_icon_desc)
-                )
+                Icon(Icons.Default.Email, contentDescription = stringResource(R.string.email_icon_desc))
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -246,10 +225,7 @@ fun SignUpScreen(
             onValueChange = { password = it },
             label = { Text(stringResource(R.string.password)) },
             leadingIcon = {
-                Icon(
-                    Icons.Default.Lock,
-                    contentDescription = stringResource(R.string.lock_icon_desc)
-                )
+                Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc))
             },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -267,10 +243,7 @@ fun SignUpScreen(
             onValueChange = { confirmPassword = it },
             label = { Text(stringResource(R.string.confirm_password)) },
             leadingIcon = {
-                Icon(
-                    Icons.Default.Lock,
-                    contentDescription = stringResource(R.string.lock_icon_desc)
-                )
+                Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.lock_icon_desc))
             },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
@@ -287,12 +260,8 @@ fun SignUpScreen(
             onClick = {
                 when {
                     email.isBlank() -> authViewModel.clearError()
-                    password != confirmPassword -> {
-                        authViewModel.clearError()
-                    }
-                    else -> {
-                        authViewModel.signUp(email.trim(), password)
-                    }
+                    password != confirmPassword -> authViewModel.clearError()
+                    else -> authViewModel.signUp(email.trim(), password)
                 }
             },
             modifier = Modifier
@@ -300,10 +269,7 @@ fun SignUpScreen(
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(
-                stringResource(R.string.sign_up),
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(stringResource(R.string.sign_up), style = MaterialTheme.typography.titleMedium)
         }
 
         if (password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword) {
@@ -330,6 +296,6 @@ fun SignUpScreen(
             Text(stringResource(R.string.already_log_in))
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
