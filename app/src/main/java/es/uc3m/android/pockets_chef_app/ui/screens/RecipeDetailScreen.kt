@@ -18,62 +18,91 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import es.uc3m.android.pockets_chef_app.R
+import es.uc3m.android.pockets_chef_app.data.model.Recipe
+// import es.uc3m.android.pockets_chef_app.data.model.Ingredient // Ensure this is imported if needed!
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+// 1. STATEFUL WRAPPER
+// Handles ViewModel, Navigation, and finding the specific recipe.
 @Composable
 fun RecipeDetailScreen(
     navController: NavController,
     recipeId: String,
     viewModel: RecipeViewModel = viewModel()
 ) {
-    // Observamos el estado de las recetas
     val recipesList by viewModel.recipesState.collectAsState()
-    
-    // Buscamos la receta en la lista actual
+
     val recipe = remember(recipesList, recipeId) {
         recipesList.find { it.id == recipeId }
     }
 
+    val isLoading = recipesList.isEmpty()
+
+    RecipeDetailScreenContent(
+        recipe = recipe,
+        isLoading = isLoading,
+        onBackClick = { navController.popBackStack() },
+        onHomeClick = {
+            navController.navigate(NavGraph.Home.route) {
+                popUpTo(NavGraph.Home.route) { inclusive = true }
+            }
+        },
+        onStartCookingClick = {
+            navController.navigate(NavGraph.CookingSteps.createRoute(recipeId))
+        }
+    )
+}
+
+// 2. STATELESS CONTENT
+// Renders the UI and passes interactions up via lambdas.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecipeDetailScreenContent(
+    recipe: Recipe?,
+    isLoading: Boolean,
+    onBackClick: () -> Unit,
+    onHomeClick: () -> Unit,
+    onStartCookingClick: () -> Unit
+) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(recipe?.title ?: stringResource(R.string.browse_recipes)) },
+            ElegantHeader(
+                title = recipe?.title ?: stringResource(R.string.browse_recipes),
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 },
-                actions = {
-                    IconButton(onClick = {
-                        navController.navigate(NavGraph.Home.route) {
-                            popUpTo(NavGraph.Home.route) { inclusive = true }
-                        }
-                    }) {
-                        Icon(Icons.Default.Home, contentDescription = stringResource(R.string.home))
+                actionContent = {
+                    IconButton(onClick = onHomeClick) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = stringResource(R.string.home),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                }
             )
         }
     ) { innerPadding ->
         if (recipe == null) {
-            // Si la receta no se encuentra (puede estar cargando), mostramos un loader
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (recipesList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLoading) {
                     CircularProgressIndicator()
                 } else {
                     Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
@@ -83,7 +112,7 @@ fun RecipeDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(innerPadding) // Prevents overlapping with the ElegantHeader
                     .verticalScroll(rememberScrollState())
             ) {
                 // Header Image/Color area
@@ -106,18 +135,22 @@ fun RecipeDetailScreen(
                 }
 
                 Column(modifier = Modifier.padding(20.dp)) {
+                    // Headline centered with fillMaxWidth()
                     Text(
                         text = recipe.title,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
-                    
+
                     Text(
                         text = recipe.description,
+                        textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -139,7 +172,7 @@ fun RecipeDetailScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
 
                     recipe.ingredients.forEach { ingredient ->
@@ -150,9 +183,7 @@ fun RecipeDetailScreen(
 
                     // Start Cooking Button
                     Button(
-                        onClick = { 
-                            navController.navigate(NavGraph.CookingSteps.createRoute(recipe.id))
-                        },
+                        onClick = onStartCookingClick, // Wired up to the lambda!
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -165,7 +196,7 @@ fun RecipeDetailScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
@@ -221,8 +252,32 @@ fun IngredientRow(name: String, amount: String) {
     }
 }
 
+// 3. PERFECT PREVIEW
 @Preview(showBackground = true)
 @Composable
 fun RecipeDetailScreenPreview() {
-    PocketsChefTheme { RecipeDetailScreen(navController = rememberNavController(), recipeId = "1") }
+    PocketsChefTheme {
+        RecipeDetailScreenContent(
+            recipe = Recipe(
+                id = "1",
+                title = "Classic Spaghetti Carbonara",
+                category = "Italian",
+                description = "A creamy, rich, and authentic Italian pasta dish made with just a few simple ingredients.",
+                duration = "25 min",
+                servings = 2,
+                ingredients = listOf(
+                    // Note: Update to match your actual Ingredient data class
+                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Spaghetti", "200g"),
+                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Guanciale", "100g"),
+                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Pecorino Romano", "50g"),
+                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Large Eggs", "2")
+                ),
+                steps = emptyList() // Not needed for this preview
+            ),
+            isLoading = false,
+            onBackClick = {},
+            onHomeClick = {},
+            onStartCookingClick = {}
+        )
+    }
 }
