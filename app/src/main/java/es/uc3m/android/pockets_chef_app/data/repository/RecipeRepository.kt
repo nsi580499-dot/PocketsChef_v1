@@ -7,11 +7,16 @@ import com.google.firebase.firestore.toObject
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
+import android.net.Uri
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
+
 
 class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.getInstance()) {
 
     private val recipeCollection = db.collection("recipes")
     private val usersCollection = db.collection("users")
+    private val storage = FirebaseStorage.getInstance()
 
     suspend fun createRecipeForUser(recipe: Recipe, userId: String): Result<String> = try {
         val docRef = recipeCollection.document()
@@ -32,6 +37,8 @@ class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
         Result.failure(e)
     }
 
+
+
     suspend fun getRecipeById(recipeId: String): Result<Recipe?> = try {
         val snapshot = recipeCollection.document(recipeId).get().await()
         Result.success(snapshot.toObject<Recipe>())
@@ -49,5 +56,16 @@ class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
         return recipeCollection
             .whereEqualTo("authorId", authorId)
             .dataObjects<Recipe>()
+    }
+    suspend fun uploadRecipeImage(userId: String, imageUri: Uri): Result<String> = try {
+        val fileName = "recipes/${userId}/${System.currentTimeMillis()}.jpg"
+        val ref = storage.reference.child(fileName)
+
+        ref.putFile(imageUri).await()
+        val downloadUrl = ref.downloadUrl.await().toString()
+
+        Result.success(downloadUrl)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 }

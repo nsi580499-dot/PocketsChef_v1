@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await // <-- ADDED THIS
+import android.net.Uri
 
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository = RecipeRepository(),
@@ -108,7 +109,8 @@ class RecipeViewModel(
         category: String,
         ingredients: List<Ingredient>,
         steps: List<RecipeStep>,
-        isPublic: Boolean
+        isPublic: Boolean,
+        imageUrl: String = ""
     ) {
         val currentUser = auth.currentUser ?: run {
             _errorMessage.value = "No user logged in"
@@ -125,7 +127,8 @@ class RecipeViewModel(
             steps = steps,
             authorId = currentUser.uid,
             authorName = currentUser.displayName ?: currentUser.email?.substringBefore("@").orEmpty(),
-            isPublic = isPublic
+            isPublic = isPublic,
+            imageUrl = imageUrl
         )
 
         viewModelScope.launch {
@@ -183,6 +186,62 @@ class RecipeViewModel(
                 _deleteRecipeSuccess.value = true
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to delete recipe"
+            }
+        }
+    }
+
+    fun createRecipeWithOptionalImage(
+        title: String,
+        description: String,
+        duration: String,
+        servings: Int,
+        category: String,
+        ingredients: List<Ingredient>,
+        steps: List<RecipeStep>,
+        isPublic: Boolean,
+        imageUri: Uri?
+    ) {
+        val currentUser = auth.currentUser ?: run {
+            _errorMessage.value = "No user logged in"
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val uploadedImageUrl = if (imageUri != null) {
+                    val uploadResult = recipeRepository.uploadRecipeImage(currentUser.uid, imageUri)
+                    if (uploadResult.isFailure) {
+                        _errorMessage.value = uploadResult.exceptionOrNull()?.message
+                        return@launch
+                    }
+                    uploadResult.getOrNull().orEmpty()
+                } else {
+                    ""
+                }
+
+                val recipe = Recipe(
+                    title = title,
+                    description = description,
+                    duration = duration,
+                    servings = servings,
+                    category = category,
+                    ingredients = ingredients,
+                    steps = steps,
+                    authorId = currentUser.uid,
+                    authorName = currentUser.displayName ?: currentUser.email?.substringBefore("@").orEmpty(),
+                    isPublic = isPublic,
+                    imageUrl = uploadedImageUrl
+                )
+
+                val result = recipeRepository.createRecipeForUser(recipe, currentUser.uid)
+
+                if (result.isSuccess) {
+                    _createRecipeSuccess.value = true
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
             }
         }
     }

@@ -20,6 +20,7 @@ data class Recipe(
     val description: String = "",
     val duration: String = "",
     val servings: Int = 0,
+    val imageUrl: String = "",
     val category: String = "",
     val ingredients: List<Ingredient> = emptyList(),
     val steps: List<RecipeStep> = emptyList(),
