@@ -119,6 +119,11 @@ class RecipeViewModel(
         val uid = auth.currentUser?.uid ?: return
         val newFavoriteStatus = !recipe.isFavorite
 
+        // Optimistically update UI immediately
+        _recipesState.value = _recipesState.value.map {
+            if (it.id == recipe.id) it.copy(isFavorite = newFavoriteStatus) else it
+        }
+
         viewModelScope.launch {
             userRepository.toggleFavoriteRecipe(uid, recipe.id, newFavoriteStatus)
         }

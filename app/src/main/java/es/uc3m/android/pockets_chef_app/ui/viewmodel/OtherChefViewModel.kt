@@ -36,19 +36,19 @@ class OtherChefViewModel(
             if (result.isSuccess) {
                 _chefProfile.value = result.getOrNull()
             }
-
-            if (myUid == userId) {
-                _isFollowing.value = false
-            } else {
-                userRepository.isFollowingFlow(myUid, userId).collectLatest {
-                    _isFollowing.value = it
-                }
-            }
         }
 
         viewModelScope.launch {
             recipeRepository.getLatestPublicRecipes().collectLatest { allRecipes ->
                 _chefRecipes.value = allRecipes.filter { it.authorId == userId }
+            }
+        }
+
+        if (myUid != userId) {
+            viewModelScope.launch {
+                userRepository.isFollowingFlow(myUid, userId).collectLatest {
+                    _isFollowing.value = it
+                }
             }
         }
     }
@@ -58,19 +58,22 @@ class OtherChefViewModel(
 
         viewModelScope.launch {
             val currentStatus = _isFollowing.value
+
+            // Optimistically update UI immediately
+            _isFollowing.value = !currentStatus
+
             userRepository.toggleFollowUser(myUid, targetUid, currentStatus)
 
             // Send notification only when following (not unfollowing)
             if (!currentStatus) {
-                val myProfile = userRepository.getUserProfile(myUid).getOrNull()
-                val myName = myProfile?.displayName ?: "Someone"
+                val targetProfile = userRepository.getUserProfile(targetUid).getOrNull()
+                val targetName = targetProfile?.displayName ?: "this Chef"
 
                 val hasPermission = ContextCompat.checkSelfPermission(
                     context,
                     android.Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
-                val targetProfile = userRepository.getUserProfile(targetUid).getOrNull()
-                val targetName = targetProfile?.displayName ?: "this Chef"
+
                 if (hasPermission) {
                     NotificationHelper.sendFollowerNotification(
                         context = context,

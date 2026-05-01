@@ -39,7 +39,7 @@ import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.HomeViewModel
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 import androidx.compose.foundation.layout.statusBarsPadding
-
+import es.uc3m.android.pockets_chef_app.ui.components.PulsingCirclesBackground
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -64,230 +64,234 @@ fun HomeScreen(
 ) {
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(scrollState)
+    Box(modifier = Modifier.fillMaxSize()) {
+        PulsingCirclesBackground()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f))
+                .verticalScroll(scrollState)
+
     ) {
-        // Elegant Header with Gradient
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
-                )
-                .statusBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 24.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Elegant Header with Gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
+                    )
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.welcome),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        text = stringResource(R.string.ready_text),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                    )
-                }
-                Surface(
-                    modifier = Modifier.size(48.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { /* TODO: Notifications */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = stringResource(R.string.notifications),
-                            tint = MaterialTheme.colorScheme.onPrimary
+                    Column {
+                        Text(
+                            text = stringResource(R.string.welcome),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            text = stringResource(R.string.ready_text),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Social Section: Other Chefs
-        SectionHeader(stringResource(R.string.discover_chefs))
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(otherChefs) { chef ->
-                ChefAvatarItem(chef = chef) {
-                    if (chef.uid.isNotBlank()) {
-                        navController.navigate(NavGraph.OtherChefProfile.createRoute(chef.uid))
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                    ) {
+                        IconButton(onClick = { navController.navigate(NavGraph.Notifications.route) }) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = stringResource(R.string.notifications),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // Quick Actions Section
-        SectionHeader(stringResource(R.string.quick_actions))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            EnhancedActionCard(
-                label = stringResource(R.string.browse_recipes),
-                icon = Icons.AutoMirrored.Filled.MenuBook,
-                modifier = Modifier.weight(1f),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                onClick = { 
-                    navController.navigate(NavGraph.Recipes.route) {
-                        popUpTo(NavGraph.Home.route) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+            // Social Section: Other Chefs
+            SectionHeader(stringResource(R.string.discover_chefs))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(otherChefs) { chef ->
+                    ChefAvatarItem(chef = chef) {
+                        if (chef.uid.isNotBlank()) {
+                            navController.navigate(NavGraph.OtherChefProfile.createRoute(chef.uid))
+                        }
                     }
                 }
-            )
-            EnhancedActionCard(
-                label = stringResource(R.string.my_pantry),
-                icon = Icons.Default.Inventory,
-                modifier = Modifier.weight(1f),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = { 
-                    navController.navigate(NavGraph.Pantry.route) {
-                        popUpTo(NavGraph.Home.route) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
-        }
+            }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // CookAI Featured Card
-        SectionHeader(stringResource(R.string.cookai))
-        Card(
-            onClick = { navController.navigate(NavGraph.CookAI.route) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = CardPrimary),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
+            // Quick Actions Section
+            SectionHeader(stringResource(R.string.quick_actions))
             Row(
                 modifier = Modifier
-                    .padding(24.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Box(
+                EnhancedActionCard(
+                    label = stringResource(R.string.browse_recipes),
+                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                    modifier = Modifier.weight(1f),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    onClick = {
+                        navController.navigate(NavGraph.Recipes.route) {
+                            popUpTo(NavGraph.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+                EnhancedActionCard(
+                    label = stringResource(R.string.my_pantry),
+                    icon = Icons.Default.Inventory,
+                    modifier = Modifier.weight(1f),
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    onClick = {
+                        navController.navigate(NavGraph.Pantry.route) {
+                            popUpTo(NavGraph.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // CookAI Featured Card
+            SectionHeader(stringResource(R.string.cookai))
+            Card(
+                onClick = { navController.navigate(NavGraph.CookAI.route) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = CardPrimary),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
                     modifier = Modifier
-                        .size(56.dp)
-                        .background(
-                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                        .padding(24.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Psychology,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.cookai),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            text = stringResource(R.string.ask_cookai),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Expiry Alerts Section
+            SectionHeader(stringResource(R.string.expiring))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp)
+                    .clickable {
+                        navController.navigate(NavGraph.Pantry.route) {
+                            popUpTo(NavGraph.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (expiringCount > 0)
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                ),
+                border = if (expiringCount > 0) {
+                    androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                    )
+                } else null
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Psychology,
+                        imageVector = if (expiringCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(32.dp)
+                        tint = if (expiringCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = if (expiringCount > 0)
+                            stringResource(R.string.items_expiring_soon_msg, expiringCount)
+                        else
+                            stringResource(R.string.no_items_expiring_msg),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (expiringCount > 0)
+                            MaterialTheme.colorScheme.onErrorContainer
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.cookai),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        text = stringResource(R.string.ask_cookai),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                    )
-                }
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Expiry Alerts Section
-        SectionHeader(stringResource(R.string.expiring))
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 4.dp)
-                .clickable { 
-                    navController.navigate(NavGraph.Pantry.route) {
-                        popUpTo(NavGraph.Home.route) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (expiringCount > 0) 
-                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-                else 
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-            ),
-            border = if (expiringCount > 0) {
-                androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
-                )
-            } else null
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = if (expiringCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = if (expiringCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = if (expiringCount > 0) 
-                        stringResource(R.string.items_expiring_soon_msg, expiringCount)
-                    else 
-                        stringResource(R.string.no_items_expiring_msg),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (expiringCount > 0) 
-                        MaterialTheme.colorScheme.onErrorContainer 
-                    else 
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 

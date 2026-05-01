@@ -3,13 +3,14 @@ package es.uc3m.android.pockets_chef_app.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.Edit // <-- Add this import
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.filled.Notifications
 
 sealed class NavGraph(
     val route: String,
@@ -26,6 +27,8 @@ sealed class NavGraph(
     data object CookAI  : NavGraph("cookai",  "CookAI",  Icons.Default.Psychology)
     data object CompleteProfile : NavGraph("complete_profile", "Complete Profile", Icons.Default.Person)
     data object CreateRecipe : NavGraph("create_recipe", "Create Recipe", Icons.Default.Add)
+
+    data object Notifications : NavGraph("notifications", "Notifications", Icons.Default.Notifications)
 
     // Detailed screens (These require a specific ID!)
     data object RecipeDetail : NavGraph("recipe_detail/{recipeId}", "Recipe Detail", Icons.Default.Book) {

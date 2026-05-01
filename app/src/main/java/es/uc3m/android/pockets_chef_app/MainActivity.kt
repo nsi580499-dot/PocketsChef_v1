@@ -57,6 +57,7 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import java.util.concurrent.TimeUnit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import es.uc3m.android.pockets_chef_app.ui.screens.EditRecipeScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.NotificationsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,6 +149,7 @@ fun PocketsChefApp() {
             currentRoute != NavGraph.RecipeDetail.route &&
             currentRoute != NavGraph.EditProfile.route &&
             currentRoute != NavGraph.CreateRecipe.route &&
+            currentRoute != NavGraph.Notifications.route &&
             !currentRoute.startsWith("cooking_steps") &&
             !currentRoute.startsWith("other_chef")
 
@@ -212,6 +214,10 @@ fun PocketsChefNavHost(
                     navController.navigate(NavGraph.Signup.route)
                 }
             )
+        }
+
+        composable(NavGraph.Notifications.route) {
+            NotificationsScreen(navController)
         }
 
         composable(
