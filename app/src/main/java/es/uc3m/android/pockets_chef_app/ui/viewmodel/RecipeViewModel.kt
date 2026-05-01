@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await // <-- ADDED THIS
 import android.net.Uri
+import kotlinx.coroutines.flow.first
 
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository = RecipeRepository(),
@@ -57,7 +58,29 @@ class RecipeViewModel(
         observeMyRecipes()
     }
 
+    fun refreshRecipes() {
+        val uid = auth.currentUser?.uid ?: return
+
+        viewModelScope.launch {
+            try {
+                recipeRepository.getLatestPublicRecipes().collect { recipes ->
+                    val favIds = userRepository.getFavoriteRecipeIdsFlow(uid).first()
+                    _recipesState.value = recipes.map { recipe ->
+                        recipe.copy(isFavorite = favIds.contains(recipe.id))
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            }
+        }
+    }
+
+    private var recipesJobStarted = false
+
     private fun observeRecipesAndFavorites() {
+        if (recipesJobStarted) return
+        recipesJobStarted = true
+
         val uid = auth.currentUser?.uid
 
         viewModelScope.launch {
@@ -71,7 +94,7 @@ class RecipeViewModel(
             combine(recipesFlow, favoritesFlow) { recipes, favIds ->
                 recipes.map { recipe ->
                     recipe.copy(isFavorite = favIds.contains(recipe.id))
-                }.sortedByDescending { it.createdAt }
+                }
             }.collect { combinedList ->
                 _recipesState.value = combinedList
             }

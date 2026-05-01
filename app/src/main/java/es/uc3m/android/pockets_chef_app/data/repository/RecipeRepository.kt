@@ -10,6 +10,7 @@ import kotlinx.coroutines.tasks.await
 import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.Query
 
 
 class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.getInstance()) {
@@ -46,15 +47,15 @@ class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
         Result.failure(e)
     }
 
-    fun getLatestPublicRecipes(): Flow<List<Recipe>> {
-        return recipeCollection
-            .whereEqualTo("isPublic", true)
-            .dataObjects<Recipe>()
-    }
-
     fun getRecipesByAuthor(authorId: String): Flow<List<Recipe>> {
         return recipeCollection
             .whereEqualTo("authorId", authorId)
+            .dataObjects<Recipe>()
+    }
+    fun getLatestPublicRecipes(): Flow<List<Recipe>> {
+        return recipeCollection
+            .whereEqualTo("isPublic", true)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .dataObjects<Recipe>()
     }
     suspend fun uploadRecipeImage(userId: String, imageUri: Uri): Result<String> = try {
