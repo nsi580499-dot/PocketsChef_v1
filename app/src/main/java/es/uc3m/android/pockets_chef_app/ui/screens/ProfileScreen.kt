@@ -17,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,8 +28,6 @@ import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
-import androidx.compose.material.icons.filled.Add
-import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 
 @Composable
@@ -99,7 +96,7 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = userProfile?.displayName ?: "Chef",
+                    text = userProfile?.displayName ?: stringResource(R.string.chef_fallback),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
@@ -119,9 +116,9 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                ProfileStat("My recipes", myRecipes.size.toString())
+                ProfileStat(stringResource(R.string.my_recipes), myRecipes.size.toString())
                 VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
-                ProfileStat("Followers", userProfile?.followersCount?.toString() ?: "0")
+                ProfileStat(stringResource(R.string.followers), userProfile?.followersCount?.toString() ?: "0")
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -131,11 +128,14 @@ fun ProfileScreen(
                 onClick = { navController.navigate(NavGraph.EditProfile.route) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
                 Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Edit Profile Information")
+                Text(stringResource(R.string.edit_profile_btn))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -177,15 +177,13 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            ProfileSectionTitle("My recipes")
+            ProfileSectionTitle(stringResource(R.string.my_recipes))
 
             Spacer(modifier = Modifier.height(12.dp))
 
             if (myRecipes.isEmpty()) {
                 Text(
-                    text = "You haven't published any recipes yet.",
+                    text = stringResource(R.string.no_recipes_published),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -214,9 +212,12 @@ fun ProfileScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.error)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.error
+                )
             ) {
-                Text("Log out")
+                Text(stringResource(R.string.logout))
             }
 
             Spacer(modifier = Modifier.height(24.dp))

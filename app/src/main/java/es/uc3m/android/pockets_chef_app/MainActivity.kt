@@ -56,6 +56,7 @@ import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import java.util.concurrent.TimeUnit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import es.uc3m.android.pockets_chef_app.ui.screens.EditRecipeScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -210,6 +211,18 @@ fun PocketsChefNavHost(
                 onNavigateToSignUp = {
                     navController.navigate(NavGraph.Signup.route)
                 }
+            )
+        }
+
+        composable(
+            route = NavGraph.EditRecipe.route, // This matches "edit_recipe/{recipeId}"
+            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
+            // Call the Stateful Edit Screen
+            EditRecipeScreen(
+                navController = navController,
+                recipeId = recipeId
             )
         }
 

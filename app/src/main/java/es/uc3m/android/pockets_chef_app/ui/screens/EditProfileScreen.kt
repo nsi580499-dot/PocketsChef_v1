@@ -28,9 +28,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
 import es.uc3m.android.pockets_chef_app.ui.util.cookingLevels
 
@@ -77,11 +79,11 @@ fun EditProfileScreen(
         }
     }
 
-    val nameError = if (name.trim().isBlank()) "Name is required" else null
+    val nameError = if (name.trim().isBlank()) stringResource(R.string.name_required) else null
     val descriptionError =
-        if (description.trim().length < 10) "Description must be at least 10 characters" else null
+        if (description.trim().length < 10) stringResource(R.string.desc_min_length) else null
     val photoUrlError =
-        if (!isValidPhotoUrl(photoUrl.trim())) "Enter a valid URL" else null
+        if (!isValidPhotoUrl(photoUrl.trim())) stringResource(R.string.photo_url_invalid) else null
 
     val isFormValid =
         nameError == null &&
@@ -100,14 +102,14 @@ fun EditProfileScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Edit profile",
+                text = stringResource(R.string.edit_profile_title),
                 style = MaterialTheme.typography.headlineSmall
             )
 
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text(stringResource(R.string.name_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = nameError != null,
                 supportingText = { if (nameError != null) Text(nameError) }
@@ -116,7 +118,7 @@ fun EditProfileScreen(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") },
+                label = { Text(stringResource(R.string.desc_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 isError = descriptionError != null,
@@ -131,13 +133,13 @@ fun EditProfileScreen(
                     value = level,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Cooking level") },
+                    label = { Text(stringResource(R.string.cooking_level_label)) },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { levelExpanded = true }
+                        .menuAnchor()
                 )
 
                 ExposedDropdownMenu(
@@ -159,7 +161,7 @@ fun EditProfileScreen(
             OutlinedTextField(
                 value = photoUrl,
                 onValueChange = { photoUrl = it },
-                label = { Text("Photo URL") },
+                label = { Text(stringResource(R.string.photo_url_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = photoUrlError != null,
                 supportingText = { if (photoUrlError != null) Text(photoUrlError) }
@@ -168,14 +170,14 @@ fun EditProfileScreen(
             OutlinedTextField(
                 value = diet,
                 onValueChange = { diet = it },
-                label = { Text("Diet preferences (comma separated)") },
+                label = { Text(stringResource(R.string.diet_pref_label)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = favoriteCuisine,
                 onValueChange = { favoriteCuisine = it },
-                label = { Text("Favourite cuisine") },
+                label = { Text(stringResource(R.string.fav_cuisine_label)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -202,7 +204,7 @@ fun EditProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isFormValid
             ) {
-                Text("Save changes")
+                Text(stringResource(R.string.save_changes_btn))
             }
         }
     }

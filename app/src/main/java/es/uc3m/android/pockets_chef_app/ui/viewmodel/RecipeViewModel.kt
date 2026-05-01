@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore // <-- ADDED THIS
 import es.uc3m.android.pockets_chef_app.data.model.Ingredient
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import es.uc3m.android.pockets_chef_app.data.model.RecipeStep
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await // <-- ADDED THIS
 
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository = RecipeRepository(),
@@ -36,8 +38,18 @@ class RecipeViewModel(
     private val _createRecipeSuccess = MutableStateFlow(false)
     val createRecipeSuccess: StateFlow<Boolean> = _createRecipeSuccess.asStateFlow()
 
+    private val _updateRecipeSuccess = MutableStateFlow(false)
+    val updateRecipeSuccess = _updateRecipeSuccess.asStateFlow()
+
+    private val _deleteRecipeSuccess = MutableStateFlow(false)
+    val deleteRecipeSuccess = _deleteRecipeSuccess.asStateFlow()
+
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // Expose current user ID so the UI can check ownership
+    val currentUserId: String?
+        get() = auth.currentUser?.uid
 
     init {
         observeRecipesAndFavorites()
@@ -126,8 +138,65 @@ class RecipeViewModel(
         }
     }
 
+    // The update function
+    fun updateRecipe(
+        recipeId: String,
+        title: String,
+        description: String,
+        duration: String,
+        servings: Int,
+        category: String,
+        ingredients: List<Ingredient>,
+        steps: List<RecipeStep>,
+        isPublic: Boolean
+    ) {
+        viewModelScope.launch {
+            try {
+                val db = FirebaseFirestore.getInstance()
+
+                // Note: We don't update the authorId or createdAt fields
+                val updates = mapOf(
+                    "title" to title,
+                    "description" to description,
+                    "duration" to duration,
+                    "servings" to servings,
+                    "category" to category,
+                    "ingredients" to ingredients,
+                    "steps" to steps,
+                    "isPublic" to isPublic
+                )
+
+                db.collection("recipes").document(recipeId).update(updates).await()
+                _updateRecipeSuccess.value = true
+
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Failed to update recipe"
+            }
+        }
+    }
+
+    fun deleteRecipe(recipeId: String) {
+        viewModelScope.launch {
+            try {
+                val db = FirebaseFirestore.getInstance()
+                db.collection("recipes").document(recipeId).delete().await()
+                _deleteRecipeSuccess.value = true
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Failed to delete recipe"
+            }
+        }
+    }
+
     fun clearCreateRecipeSuccess() {
         _createRecipeSuccess.value = false
+    }
+
+    fun clearUpdateRecipeSuccess() {
+        _updateRecipeSuccess.value = false
+    }
+
+    fun clearDeleteRecipeSuccess() {
+        _deleteRecipeSuccess.value = false
     }
 
     fun clearError() {

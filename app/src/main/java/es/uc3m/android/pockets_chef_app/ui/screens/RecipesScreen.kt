@@ -70,15 +70,13 @@ fun RecipesScreenContent(
                 onClick = onAddRecipeClick,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add recipe")
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.add_recipe_desc)
+                )
             }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+        },
+        topBar = {
             // Elegant Header with Gradient
             Box(
                 modifier = Modifier
@@ -119,6 +117,14 @@ fun RecipesScreenContent(
                     )
                 }
             }
+        }
+
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
 
             TabRow(
                 selectedTabIndex = if (showFavoritesOnly) 1 else 0,

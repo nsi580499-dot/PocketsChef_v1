@@ -1,57 +1,29 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.Ingredient
 import es.uc3m.android.pockets_chef_app.data.model.RecipeStep
+import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
-import es.uc3m.android.pockets_chef_app.ui.util.recipeCategories
 
 private const val MAX_INGREDIENTS = 20
 private const val MAX_STEPS = 15
@@ -60,28 +32,11 @@ private val recipeCategories = listOf(
     "Breakfast", "Main", "Dessert", "Snack", "Drink"
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateRecipeScreen(
     navController: NavController,
     viewModel: RecipeViewModel = viewModel()
 ) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
-    var duration by rememberSaveable { mutableStateOf("") }
-    var servings by rememberSaveable { mutableStateOf("1") }
-    var category by rememberSaveable { mutableStateOf("Breakfast") }
-    var isPublic by rememberSaveable { mutableStateOf(true) }
-    var categoryExpanded by rememberSaveable { mutableStateOf(false) }
-
-    val ingredients = remember {
-        mutableStateListOf(Ingredient("", ""))
-    }
-
-    val steps = remember {
-        mutableStateListOf(RecipeStep(1, ""))
-    }
-
     val createSuccess by viewModel.createRecipeSuccess.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
@@ -92,50 +47,80 @@ fun CreateRecipeScreen(
         }
     }
 
-    val cleanIngredients = ingredients.filter {
-        it.name.isNotBlank() && it.amount.isNotBlank()
-    }
+    CreateRecipeScreenContent(
+        errorMessage = errorMessage,
+        onBackClick = { navController.popBackStack() },
+        onUploadClick = { title, description, duration, servings, category, ingredients, steps, isPublic ->
+            viewModel.createRecipe(
+                title = title,
+                description = description,
+                duration = duration,
+                servings = servings,
+                category = category,
+                ingredients = ingredients,
+                steps = steps,
+                isPublic = isPublic
+            )
+        }
+    )
+}
 
-    val cleanSteps = steps.filter {
-        it.description.isNotBlank()
-    }.mapIndexed { index, item ->
-        item.copy(order = index + 1)
-    }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateRecipeScreenContent(
+    errorMessage: String?,
+    onBackClick: () -> Unit,
+    onUploadClick: (
+        title: String,
+        description: String,
+        duration: String,
+        servings: Int,
+        category: String,
+        ingredients: List<Ingredient>,
+        steps: List<RecipeStep>,
+        isPublic: Boolean
+    ) -> Unit
+) {
+    var title by rememberSaveable { mutableStateOf("") }
+    var description by rememberSaveable { mutableStateOf("") }
+    var duration by rememberSaveable { mutableStateOf("") }
+    var servings by rememberSaveable { mutableStateOf("1") }
+    var category by rememberSaveable { mutableStateOf("Breakfast") }
+    var isPublic by rememberSaveable { mutableStateOf(true) }
+    var categoryExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val titleError = if (title.trim().isBlank()) "Title is required" else null
-    val descriptionError =
-        if (description.trim().length < 10) "Description must be at least 10 characters" else null
-    val durationError = if (duration.trim().isBlank()) "Duration is required" else null
+    val ingredients = remember { mutableStateListOf(Ingredient("", "")) }
+    val steps = remember { mutableStateListOf(RecipeStep(1, "")) }
+
+    val cleanIngredients = ingredients.filter { it.name.isNotBlank() && it.amount.isNotBlank() }
+    val cleanSteps = steps.filter { it.description.isNotBlank() }
+        .mapIndexed { index, item -> item.copy(order = index + 1) }
+
+    val titleError = if (title.trim().isBlank()) stringResource(R.string.title_required) else null
+    val descriptionError = if (description.trim().length < 10) stringResource(R.string.description_min_length) else null
+    val durationError = if (duration.trim().isBlank()) stringResource(R.string.duration_required) else null
     val servingsInt = servings.toIntOrNull()
-    val servingsError =
-        if (servingsInt == null || servingsInt < 1) "Servings must be at least 1" else null
-    val ingredientsError =
-        if (cleanIngredients.isEmpty()) "Add at least 1 complete ingredient" else null
-    val stepsError =
-        if (cleanSteps.isEmpty()) "Add at least 1 step" else null
+    val servingsError = if (servingsInt == null || servingsInt < 1) stringResource(R.string.servings_min_value) else null
+    val ingredientsError = if (cleanIngredients.isEmpty()) stringResource(R.string.ingredient_required) else null
+    val stepsError = if (cleanSteps.isEmpty()) stringResource(R.string.step_required) else null
 
-    val isFormValid =
-        titleError == null &&
-                descriptionError == null &&
-                durationError == null &&
-                servingsError == null &&
-                ingredientsError == null &&
-                stepsError == null
+    val isFormValid = titleError == null && descriptionError == null &&
+            durationError == null && servingsError == null &&
+            ingredientsError == null && stepsError == null
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Create recipe") },
+            ElegantHeader(
+                title = stringResource(R.string.create_recipe_title),
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                }
             )
         }
     ) { innerPadding ->
@@ -151,51 +136,43 @@ fun CreateRecipeScreen(
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Title") },
+                label = { Text(stringResource(R.string.title_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = titleError != null,
-                supportingText = {
-                    if (titleError != null) Text(titleError)
-                }
+                supportingText = { if (titleError != null) Text(titleError) }
             )
 
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") },
+                label = { Text(stringResource(R.string.description_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 isError = descriptionError != null,
-                supportingText = {
-                    if (descriptionError != null) Text(descriptionError)
-                }
+                supportingText = { if (descriptionError != null) Text(descriptionError) }
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = duration,
                     onValueChange = { duration = it },
-                    label = { Text("Duration") },
+                    label = { Text(stringResource(R.string.duration_label)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     isError = durationError != null,
-                    supportingText = {
-                        if (durationError != null) Text(durationError)
-                    }
+                    supportingText = { if (durationError != null) Text(durationError) }
                 )
 
                 OutlinedTextField(
                     value = servings,
                     onValueChange = { servings = it.filter(Char::isDigit) },
-                    label = { Text("Servings") },
+                    label = { Text(stringResource(R.string.servings_label)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = servingsError != null,
-                    supportingText = {
-                        if (servingsError != null) Text(servingsError)
-                    }
+                    supportingText = { if (servingsError != null) Text(servingsError) }
                 )
             }
 
@@ -207,13 +184,11 @@ fun CreateRecipeScreen(
                     value = category,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Category") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
-                    },
+                    label = { Text(stringResource(R.string.category_label)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { categoryExpanded = true }
+                        .menuAnchor()
                 )
 
                 ExposedDropdownMenu(
@@ -221,8 +196,16 @@ fun CreateRecipeScreen(
                     onDismissRequest = { categoryExpanded = false }
                 ) {
                     recipeCategories.forEach { item ->
+                        val categoryResId = when(item) {
+                            "Breakfast" -> R.string.category_breakfast
+                            "Main" -> R.string.category_main
+                            "Dessert" -> R.string.category_dessert
+                            "Snack" -> R.string.category_snack
+                            "Drink" -> R.string.category_drink
+                            else -> R.string.category_all
+                        }
                         DropdownMenuItem(
-                            text = { Text(item) },
+                            text = { Text(stringResource(categoryResId)) },
                             onClick = {
                                 category = item
                                 categoryExpanded = false
@@ -232,76 +215,68 @@ fun CreateRecipeScreen(
                 }
             }
 
-            Row {
-                Checkbox(
-                    checked = isPublic,
-                    onCheckedChange = { isPublic = it }
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = isPublic, onCheckedChange = { isPublic = it })
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Public recipe")
+                Text(stringResource(R.string.public_recipe_label))
             }
 
-            Text("Ingredients", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.ingredients_title), style = MaterialTheme.typography.titleMedium)
 
             ingredients.forEachIndexed { index, ingredient ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Ingredient ${index + 1}",
+                                text = stringResource(R.string.ingredient_count_label, index + 1),
                                 modifier = Modifier.weight(1f)
                             )
                             if (ingredients.size > 1) {
                                 IconButton(onClick = { ingredients.removeAt(index) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = null)
+                                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                                 }
                             }
                         }
 
                         OutlinedTextField(
                             value = ingredient.name,
-                            onValueChange = {
-                                ingredients[index] = ingredient.copy(name = it)
-                            },
-                            label = { Text("Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            onValueChange = { ingredients[index] = ingredient.copy(name = it) },
+                            label = { Text(stringResource(R.string.ingredient_name_placeholder)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
                         )
-
+                        Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = ingredient.amount,
-                            onValueChange = {
-                                ingredients[index] = ingredient.copy(amount = it)
-                            },
-                            label = { Text("Amount") },
-                            modifier = Modifier.fillMaxWidth()
+                            onValueChange = { ingredients[index] = ingredient.copy(amount = it) },
+                            label = { Text(stringResource(R.string.ingredient_amount_placeholder)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
                         )
                     }
                 }
             }
 
             if (ingredientsError != null) {
-                Text(
-                    text = ingredientsError,
-                    color = MaterialTheme.colorScheme.error
-                )
+                Text(text = ingredientsError, color = MaterialTheme.colorScheme.error)
             }
 
             if (ingredients.size < MAX_INGREDIENTS) {
                 TextButton(onClick = { ingredients.add(Ingredient("", "")) }) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Add ingredient")
+                    Text(stringResource(R.string.add_ingredient_btn))
                 }
             }
 
-            Text("Steps", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.steps_title), style = MaterialTheme.typography.titleMedium)
 
             steps.forEachIndexed { index, step ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Step ${index + 1}",
+                                text = stringResource(R.string.step_label, index + 1),
                                 modifier = Modifier.weight(1f)
                             )
                             if (steps.size > 1) {
@@ -311,17 +286,15 @@ fun CreateRecipeScreen(
                                         steps[i] = steps[i].copy(order = i + 1)
                                     }
                                 }) {
-                                    Icon(Icons.Default.Delete, contentDescription = null)
+                                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                                 }
                             }
                         }
 
                         OutlinedTextField(
                             value = step.description,
-                            onValueChange = {
-                                steps[index] = step.copy(description = it, order = index + 1)
-                            },
-                            label = { Text("Description") },
+                            onValueChange = { steps[index] = step.copy(description = it, order = index + 1) },
+                            label = { Text(stringResource(R.string.instructions_label)) },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 2
                         )
@@ -330,25 +303,19 @@ fun CreateRecipeScreen(
             }
 
             if (stepsError != null) {
-                Text(
-                    text = stepsError,
-                    color = MaterialTheme.colorScheme.error
-                )
+                Text(text = stepsError, color = MaterialTheme.colorScheme.error)
             }
 
             if (steps.size < MAX_STEPS) {
                 TextButton(onClick = { steps.add(RecipeStep(steps.size + 1, "")) }) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Add step")
+                    Text(stringResource(R.string.add_step_btn))
                 }
             }
 
             errorMessage?.let {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error
-                )
+                Text(text = it, color = MaterialTheme.colorScheme.error)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -356,23 +323,37 @@ fun CreateRecipeScreen(
             Button(
                 onClick = {
                     if (isFormValid) {
-                        viewModel.createRecipe(
-                            title = title.trim(),
-                            description = description.trim(),
-                            duration = duration.trim(),
-                            servings = servingsInt ?: 1,
-                            category = category.trim(),
-                            ingredients = cleanIngredients,
-                            steps = cleanSteps,
-                            isPublic = isPublic
+                        onUploadClick(
+                            title.trim(),
+                            description.trim(),
+                            duration.trim(),
+                            servingsInt ?: 1,
+                            category.trim(),
+                            cleanIngredients,
+                            cleanSteps,
+                            isPublic
                         )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isFormValid
             ) {
-                Text("Upload recipe")
+                Text(stringResource(R.string.upload_recipe_btn))
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CreateRecipeScreenPreview() {
+    PocketsChefTheme {
+        CreateRecipeScreenContent(
+            errorMessage = null,
+            onBackClick = {},
+            onUploadClick = { _, _, _, _, _, _, _, _ -> }
+        )
     }
 }

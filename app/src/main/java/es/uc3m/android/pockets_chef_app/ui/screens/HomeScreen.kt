@@ -123,7 +123,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Social Section: Other Chefs
-        SectionHeader("Discover Other Chefs")
+        SectionHeader(stringResource(R.string.discover_chefs))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),

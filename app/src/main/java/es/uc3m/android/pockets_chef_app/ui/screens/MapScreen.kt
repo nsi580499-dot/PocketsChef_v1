@@ -107,8 +107,8 @@ fun MapScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
                 Text(
-                    text = if (viewModel.isLoading) "Searching nearby stores..."
-                    else "${viewModel.supermarkets.size} stores found nearby",
+                    text = if (viewModel.isLoading) stringResource(R.string.searching_nearby_stores)
+                    else stringResource(R.string.stores_found_nearby, viewModel.supermarkets.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                 )
@@ -209,7 +209,7 @@ fun MapScreen(
                         IconButton(onClick = { selectedSupermarket = null }) {
                             Icon(
                                 Icons.Default.LocationOn,
-                                contentDescription = "Close",
+                                contentDescription = stringResource(R.string.close),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }

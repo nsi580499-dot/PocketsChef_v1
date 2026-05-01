@@ -32,6 +32,7 @@
     <string name="items_in_your_pantry">%1$d items in your pantry</string>
     <string name="no_items">No items yet. Tap + to add!</string>
     <string name="delete">Delete</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
 
     <!-- Pantry Screen -->
     <string name="add_pantry_item_title">Add Pantry Item</string>
@@ -55,6 +56,11 @@
     <string name="category_vegetables">Vegetables</string>
     <string name="category_grains">Grains</string>
     <string name="category_condiments">Condiments</string>
+    <string name="category_breakfast">Breakfast</string>
+    <string name="category_main">Main</string>
+    <string name="category_dessert">Dessert</string>
+    <string name="category_snack">Snack</string>
+    <string name="category_drink">Drink</string>
 
     <!-- Recipes Screen -->
     <string name="recipe_collection_title">Recipe Collection</string>
@@ -65,6 +71,7 @@
     <string name="no_recipes_found_message">No recipes found.</string>
     <string name="recipe_duration_servings">%1$s · %2$d servings</string>
     <string name="toggle_favorite_desc">Toggle favorite</string>
+    <string name="add_recipe_desc">Add recipe</string>
 
     <!-- Profile Screen -->
     <string name="profile_title">Profile</string>
@@ -87,6 +94,25 @@
     <string name="chef_bio_placeholder">Passionate about home cooking and experimenting with new spices.</string>
     <string name="stats_recipes_cooked">Recipes Cooked</string>
     <string name="stats_pantry_items">Pantry Items</string>
+    <string name="followers">Followers</string>
+    <string name="edit_profile_btn">Edit Profile Information</string>
+    <string name="my_recipes">My recipes</string>
+    <string name="no_recipes_published">You haven\'t published any recipes yet.</string>
+    <string name="logout">Log out</string>
+    <string name="chef_fallback">Chef</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="edit_profile_title">Edit profile</string>
+    <string name="name_label">Name</string>
+    <string name="name_required">Name is required</string>
+    <string name="desc_label">Description</string>
+    <string name="desc_min_length">Description must be at least 10 characters</string>
+    <string name="cooking_level_label">Cooking level</string>
+    <string name="photo_url_label">Photo URL</string>
+    <string name="photo_url_invalid">Enter a valid URL</string>
+    <string name="diet_pref_label">Diet preferences (comma separated)</string>
+    <string name="fav_cuisine_label">Favourite cuisine</string>
+    <string name="save_changes_btn">Save changes</string>
 
     <!-- CookAI Screen -->
     <string name="cookai_greeting">Hello Chef! I\'m CookAI. How can I help you today?</string>
@@ -101,8 +127,45 @@
     <string name="start_cooking">Start Cooking!</string>
     <string name="back">Back</string>
     <string name="home">Home</string>
+    <string name="recipe_not_found">Recipe not found</string>
+    <string name="servings_count">%1$d servings</string>
 
     <!-- Home Screen -->
     <string name="items_expiring_soon_msg">You have %1$d items expiring soon!</string>
     <string name="no_items_expiring_msg">Your pantry is looking fresh! No items expiring soon.</string>
+    <string name="discover_chefs">Discover Other Chefs</string>
+
+    <!-- Cooking Steps Screen -->
+    <string name="steps_not_available">Steps not available</string>
+    <string name="step_label">Step %1$d</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="finish">Finish</string>
+
+    <!-- Map Screen -->
+    <string name="searching_nearby_stores">Searching nearby stores...</string>
+    <string name="stores_found_nearby">%1$d stores found nearby</string>
+    <string name="close">Close</string>
+
+    <!-- Create Recipe Screen -->
+    <string name="create_recipe_title">Create Recipe</string>
+    <string name="title_label">Title</string>
+    <string name="title_required">Title is required</string>
+    <string name="description_label">Description</string>
+    <string name="description_min_length">Description must be at least 10 characters</string>
+    <string name="duration_label">Duration (e.g. 45 min)</string>
+    <string name="duration_required">Duration is required</string>
+    <string name="servings_label">Servings</string>
+    <string name="servings_min_value">Servings must be at least 1</string>
+    <string name="public_recipe_label">Public recipe (Share with others)</string>
+    <string name="ingredient_name_placeholder">Name (e.g. Tomato)</string>
+    <string name="ingredient_amount_placeholder">Amount (e.g. 200g)</string>
+    <string name="ingredient_required">Add at least 1 complete ingredient</string>
+    <string name="add_ingredient_btn">Add ingredient</string>
+    <string name="steps_title">Steps</string>
+    <string name="instructions_label">Instructions</string>
+    <string name="step_required">Add at least 1 step</string>
+    <string name="add_step_btn">Add step</string>
+    <string name="upload_recipe_btn">Upload recipe</string>
+    <string name="ingredient_count_label">Ingredient %1$d</string>
 </resources>

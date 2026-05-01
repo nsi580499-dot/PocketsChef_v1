@@ -1,14 +1,15 @@
 package es.uc3m.android.pockets_chef_app.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Edit // <-- Add this import
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material.icons.filled.Add
 
 sealed class NavGraph(
     val route: String,
@@ -26,7 +27,7 @@ sealed class NavGraph(
     data object CompleteProfile : NavGraph("complete_profile", "Complete Profile", Icons.Default.Person)
     data object CreateRecipe : NavGraph("create_recipe", "Create Recipe", Icons.Default.Add)
 
-    // Detailed screens
+    // Detailed screens (These require a specific ID!)
     data object RecipeDetail : NavGraph("recipe_detail/{recipeId}", "Recipe Detail", Icons.Default.Book) {
         fun createRoute(recipeId: String) = "recipe_detail/$recipeId"
     }
@@ -37,6 +38,11 @@ sealed class NavGraph(
 
     data object OtherChefProfile : NavGraph("other_chef/{userId}", "Chef Profile", Icons.Default.Person) {
         fun createRoute(userId: String) = "other_chef/$userId"
+    }
+
+    // NEW: Add the Edit Recipe route here!
+    data object EditRecipe : NavGraph("edit_recipe/{recipeId}", "Edit Recipe", Icons.Default.Edit) {
+        fun createRoute(recipeId: String) = "edit_recipe/$recipeId"
     }
 
     data object EditProfile : NavGraph("edit_profile", "Edit Profile", Icons.Default.Person)

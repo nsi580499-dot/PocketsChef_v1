@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit // <-- Added Edit Icon
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Timer
@@ -31,7 +32,6 @@ import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 
 // 1. STATEFUL WRAPPER
-// Handles ViewModel, Navigation, and finding the specific recipe.
 @Composable
 fun RecipeDetailScreen(
     navController: NavController,
@@ -46,9 +46,14 @@ fun RecipeDetailScreen(
 
     val isLoading = recipesList.isEmpty()
 
+    // Check if the current logged-in user is the author of this recipe
+    val currentUserId = viewModel.currentUserId
+    val isCreator = recipe?.authorId == currentUserId
+
     RecipeDetailScreenContent(
         recipe = recipe,
         isLoading = isLoading,
+        isCreator = isCreator, // Pass ownership state down
         onBackClick = { navController.popBackStack() },
         onHomeClick = {
             navController.navigate(NavGraph.Home.route) {
@@ -57,20 +62,26 @@ fun RecipeDetailScreen(
         },
         onStartCookingClick = {
             navController.navigate(NavGraph.CookingSteps.createRoute(recipeId))
+        },
+        onEditClick = {
+            // Note: Make sure you have added an EditRecipe route to your NavGraph!
+            // E.g., NavGraph.EditRecipe.createRoute(recipeId)
+            navController.navigate("edit_recipe/$recipeId")
         }
     )
 }
 
 // 2. STATELESS CONTENT
-// Renders the UI and passes interactions up via lambdas.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailScreenContent(
     recipe: Recipe?,
     isLoading: Boolean,
+    isCreator: Boolean, // Added parameter
     onBackClick: () -> Unit,
     onHomeClick: () -> Unit,
-    onStartCookingClick: () -> Unit
+    onStartCookingClick: () -> Unit,
+    onEditClick: () -> Unit // Added parameter
 ) {
     Scaffold(
         topBar = {
@@ -86,12 +97,24 @@ fun RecipeDetailScreenContent(
                     }
                 },
                 actionContent = {
-                    IconButton(onClick = onHomeClick) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = stringResource(R.string.home),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // ONLY show the Edit button if they are the creator
+                        if (isCreator) {
+                            IconButton(onClick = onEditClick) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Recipe",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                        IconButton(onClick = onHomeClick) {
+                            Icon(
+                                imageVector = Icons.Default.Home,
+                                contentDescription = stringResource(R.string.home),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
             )
@@ -112,7 +135,7 @@ fun RecipeDetailScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding) // Prevents overlapping with the ElegantHeader
+                    .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
             ) {
                 // Header Image/Color area
@@ -183,7 +206,7 @@ fun RecipeDetailScreenContent(
 
                     // Start Cooking Button
                     Button(
-                        onClick = onStartCookingClick, // Wired up to the lambda!
+                        onClick = onStartCookingClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -260,24 +283,26 @@ fun RecipeDetailScreenPreview() {
         RecipeDetailScreenContent(
             recipe = Recipe(
                 id = "1",
+                authorId = "user123", // Mock author
                 title = "Classic Spaghetti Carbonara",
                 category = "Italian",
                 description = "A creamy, rich, and authentic Italian pasta dish made with just a few simple ingredients.",
                 duration = "25 min",
                 servings = 2,
                 ingredients = listOf(
-                    // Note: Update to match your actual Ingredient data class
                     es.uc3m.android.pockets_chef_app.data.model.Ingredient("Spaghetti", "200g"),
                     es.uc3m.android.pockets_chef_app.data.model.Ingredient("Guanciale", "100g"),
                     es.uc3m.android.pockets_chef_app.data.model.Ingredient("Pecorino Romano", "50g"),
                     es.uc3m.android.pockets_chef_app.data.model.Ingredient("Large Eggs", "2")
                 ),
-                steps = emptyList() // Not needed for this preview
+                steps = emptyList()
             ),
             isLoading = false,
+            isCreator = true, // Set to true in preview so you can see the Edit button!
             onBackClick = {},
             onHomeClick = {},
-            onStartCookingClick = {}
+            onStartCookingClick = {},
+            onEditClick = {}
         )
     }
 }
