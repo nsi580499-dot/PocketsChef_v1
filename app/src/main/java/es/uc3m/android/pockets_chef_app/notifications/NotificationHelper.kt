@@ -11,24 +11,19 @@ import androidx.core.app.NotificationManagerCompat
 import es.uc3m.android.pockets_chef_app.MainActivity
 import es.uc3m.android.pockets_chef_app.R
 
-
 object NotificationHelper {
 
-    // Channel IDs
     const val EXPIRY_CHANNEL_ID = "expiry_channel"
     const val FOLLOWER_CHANNEL_ID = "follower_channel"
 
-    // Notification IDs
     private const val EXPIRY_NOTIFICATION_ID = 1001
     private const val FOLLOWER_NOTIFICATION_ID = 1002
 
-    // Create both notification channels
     fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            // Expiry channel — default importance
             val expiryChannel = NotificationChannel(
                 EXPIRY_CHANNEL_ID,
                 "Expiry Alerts",
@@ -37,7 +32,6 @@ object NotificationHelper {
                 description = "Alerts for pantry items expiring soon"
             }
 
-            // Follower channel — high importance (heads-up)
             val followerChannel = NotificationChannel(
                 FOLLOWER_CHANNEL_ID,
                 "New Followers",
@@ -51,18 +45,19 @@ object NotificationHelper {
         }
     }
 
-    // Pending intent — opens app when notification is tapped
     private fun getPendingIntent(context: Context): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+
         return PendingIntent.getActivity(
-            context, 0, intent,
+            context,
+            0,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
 
-    // Send expiry notification
     @androidx.annotation.RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
     fun sendExpiryNotification(context: Context, itemName: String, daysLeft: Int) {
         val title = "⚠️ Item Expiring Soon"
@@ -86,13 +81,12 @@ object NotificationHelper {
         }
     }
 
-    // Send follower notification
     @androidx.annotation.RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-    fun sendFollowerNotification(context: Context, followerName: String) {
+    fun sendFollowerNotification(context: Context, followedChefName: String) {
         val notification = NotificationCompat.Builder(context, FOLLOWER_CHANNEL_ID)
             .setSmallIcon(R.drawable.logo_pocketschef)
-            .setContentTitle("👨‍🍳 You started to follow $followerName!!!")
-            .setContentText("You can now see all of $followerName's recipes and cooking creations in your feed!")
+            .setContentTitle("👨‍🍳 Followed successfully")
+            .setContentText("You are now following $followedChefName.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(getPendingIntent(context))
             .setAutoCancel(true)

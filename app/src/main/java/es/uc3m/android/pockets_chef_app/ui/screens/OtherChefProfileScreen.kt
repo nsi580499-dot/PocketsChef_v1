@@ -2,16 +2,40 @@ package es.uc3m.android.pockets_chef_app.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -40,14 +64,18 @@ fun OtherChefProfileScreen(
     val chef by viewModel.chefProfile.collectAsState()
     val recipes by viewModel.chefRecipes.collectAsState()
     val isFollowing by viewModel.isFollowing.collectAsState()
+    val followUiOverride by viewModel.followUiOverride.collectAsState()
+    val effectiveIsFollowing = followUiOverride ?: isFollowing
+    val followActionInProgress by viewModel.followActionInProgress.collectAsState()
+    val followStateLoaded by viewModel.followStateLoaded.collectAsState()
+
     val myUid = authViewModel.getCurrentUserUid() ?: ""
     val isOwnProfile = myUid == userId
     val context = LocalContext.current
 
-    // Request notification permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { _ -> }
+    ) { }
 
     LaunchedEffect(Unit) {
         permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -62,13 +90,15 @@ fun OtherChefProfileScreen(
     Box(modifier = Modifier.fillMaxSize()) {
 
         if (chef == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
         } else {
             Column(modifier = Modifier.fillMaxSize()) {
 
-                // Gradient header
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -90,25 +120,31 @@ fun OtherChefProfileScreen(
                             modifier = Modifier.size(90.dp),
                             iconPadding = 20
                         )
+
                         Spacer(modifier = Modifier.height(12.dp))
+
                         Text(
                             text = chef!!.displayName,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
+
                         Text(
                             text = chef!!.cookingLevel,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                         )
+
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Follow button
                         if (!isOwnProfile) {
                             Button(
-                                onClick = { viewModel.toggleFollow(myUid, userId, context) },
-                                colors = if (isFollowing) {
+                                onClick = {
+                                    viewModel.toggleFollow(myUid, userId, context)
+                                },
+                                enabled = followStateLoaded && !followActionInProgress,
+                                colors = if (effectiveIsFollowing) {
                                     ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
                                         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -120,26 +156,42 @@ fun OtherChefProfileScreen(
                                     )
                                 },
                                 shape = RoundedCornerShape(24.dp),
-                                border = if (isFollowing) {
-                                    androidx.compose.foundation.BorderStroke(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.onPrimary
-                                    )
+                                border = if (effectiveIsFollowing) {
+                                    BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary)
                                 } else null
                             ) {
-                                Icon(
-                                    imageVector = if (isFollowing) Icons.Default.Check else Icons.Default.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                if (!followStateLoaded || followActionInProgress) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
+                                        color = if (isFollowing) {
+                                            MaterialTheme.colorScheme.onPrimary
+                                        } else {
+                                            MaterialTheme.colorScheme.primary
+                                        }
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = if (effectiveIsFollowing) Icons.Default.Check else Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(if (isFollowing) "Following" else "Follow Chef")
+
+                                Text(
+                                    text = when {
+                                        !followStateLoaded -> "Loading..."
+                                        effectiveIsFollowing -> "Followed"
+                                        else -> "Follow Chef"
+                                    }
+                                )
                             }
                         }
                     }
                 }
 
-                // Content
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(20.dp),
@@ -195,7 +247,6 @@ fun OtherChefProfileScreen(
             }
         }
 
-        // Floating back button — top left
         IconButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier
@@ -209,7 +260,6 @@ fun OtherChefProfileScreen(
             )
         }
 
-        // Floating home button — top right
         IconButton(
             onClick = {
                 navController.navigate(NavGraph.Home.route) {
@@ -228,4 +278,3 @@ fun OtherChefProfileScreen(
         }
     }
 }
-
