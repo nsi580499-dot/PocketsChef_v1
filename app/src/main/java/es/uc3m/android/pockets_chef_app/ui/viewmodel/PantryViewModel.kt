@@ -39,8 +39,22 @@ class PantryViewModel(
     private fun startObservingPantry() {
         val currentUser = auth.currentUser ?: return
         viewModelScope.launch {
+//            repository.getPantryItems(currentUser.uid).collectLatest { list ->
+//                _items.value = list
+//            }
             repository.getPantryItems(currentUser.uid).collectLatest { list ->
-                _items.value = list
+                val currentTime = System.currentTimeMillis()
+                // 5 days in milliseconds
+                val fiveDaysInMillis = 5L * 24 * 60 * 60 * 1000
+
+                // Map the list to update the 'isExpiringSoon' status dynamically
+                val updatedList = list.map { item ->
+                    val diff = item.expiryDate - currentTime
+                    // Mark as true if it expires in less than 5 days
+                    item.copy(isExpiringSoon = diff > 0 && diff < fiveDaysInMillis)
+                }
+
+                _items.value = updatedList
             }
         }
     }
@@ -57,7 +71,7 @@ class PantryViewModel(
                 val daysLeft =
                     ((item.expiryDate - System.currentTimeMillis()) / (1000 * 60 * 60 * 24)).toInt()
 
-                if (daysLeft <= 2) {
+                if (daysLeft <= 5) {
                     val title = "⚠️ Expiry Alert"
                     val message = when (daysLeft) {
                         0 -> "${item.name} expires today!"

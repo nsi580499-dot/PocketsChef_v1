@@ -54,6 +54,7 @@ class RecipeViewModel(
         get() = auth.currentUser?.uid
 
     init {
+        refreshRecipes()
         observeRecipesAndFavorites()
         observeMyRecipes()
     }
@@ -129,46 +130,6 @@ class RecipeViewModel(
         }
     }
 
-    fun createRecipe(
-        title: String,
-        description: String,
-        duration: String,
-        servings: Int,
-        category: String,
-        ingredients: List<Ingredient>,
-        steps: List<RecipeStep>,
-        isPublic: Boolean,
-        imageUrl: String = ""
-    ) {
-        val currentUser = auth.currentUser ?: run {
-            _errorMessage.value = "No user logged in"
-            return
-        }
-
-        val recipe = Recipe(
-            title = title,
-            description = description,
-            duration = duration,
-            servings = servings,
-            category = category,
-            ingredients = ingredients,
-            steps = steps,
-            authorId = currentUser.uid,
-            authorName = currentUser.displayName ?: currentUser.email?.substringBefore("@").orEmpty(),
-            isPublic = isPublic,
-            imageUrl = imageUrl
-        )
-
-        viewModelScope.launch {
-            val result = recipeRepository.createRecipeForUser(recipe, currentUser.uid)
-            if (result.isSuccess) {
-                _createRecipeSuccess.value = true
-            } else {
-                _errorMessage.value = result.exceptionOrNull()?.message
-            }
-        }
-    }
-
     // The update function
     fun updateRecipe(
         recipeId: String,
@@ -199,6 +160,7 @@ class RecipeViewModel(
 
                 db.collection("recipes").document(recipeId).update(updates).await()
                 _updateRecipeSuccess.value = true
+                refreshRecipes()
 
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to update recipe"
@@ -212,6 +174,7 @@ class RecipeViewModel(
                 val db = FirebaseFirestore.getInstance()
                 db.collection("recipes").document(recipeId).delete().await()
                 _deleteRecipeSuccess.value = true
+                refreshRecipes()
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to delete recipe"
             }
@@ -265,6 +228,7 @@ class RecipeViewModel(
 
                 if (result.isSuccess) {
                     _createRecipeSuccess.value = true
+                    refreshRecipes()
                 } else {
                     _errorMessage.value = result.exceptionOrNull()?.message
                 }

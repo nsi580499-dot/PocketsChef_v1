@@ -43,9 +43,20 @@ class HomeViewModel(
 
     private fun observeExpiringItems() {
         val uid = auth.currentUser?.uid ?: return
+
         viewModelScope.launch {
             pantryRepository.getPantryItems(uid).collectLatest { items ->
-                _expiringItemsCount.value = items.count { it.isExpiringSoon }
+                val currentTime = System.currentTimeMillis()
+                // Define 5 days in milliseconds: 5 days * 24h * 60m * 60s * 1000ms
+                val fiveDaysInMillis = 5L * 24 * 60 * 60 * 1000
+
+                val count = items.count { item ->
+                    val diff = item.expiryDate - currentTime
+                    // Item is expiring soon if it expires in less than 5 days
+                    diff > 0 && diff < fiveDaysInMillis
+                }
+
+                _expiringItemsCount.value = count
             }
         }
     }
