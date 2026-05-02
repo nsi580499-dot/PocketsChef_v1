@@ -53,13 +53,16 @@ import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
+
 
 @Composable
 fun OtherChefProfileScreen(
     navController: NavController,
     userId: String,
     viewModel: OtherChefViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    recipeViewModel: RecipeViewModel = viewModel()
 ) {
     val chef by viewModel.chefProfile.collectAsState()
     val recipes by viewModel.chefRecipes.collectAsState()
@@ -68,6 +71,9 @@ fun OtherChefProfileScreen(
     val effectiveIsFollowing = followUiOverride ?: isFollowing
     val followActionInProgress by viewModel.followActionInProgress.collectAsState()
     val followStateLoaded by viewModel.followStateLoaded.collectAsState()
+    val allRecipes by recipeViewModel.recipesState.collectAsState()
+
+    val otherChefRecipes = allRecipes.filter { it.authorId == userId }
 
     val myUid = authViewModel.getCurrentUserUid() ?: ""
     val isOwnProfile = myUid == userId
@@ -204,7 +210,7 @@ fun OtherChefProfileScreen(
                         ) {
                             ProfileStat(
                                 stringResource(R.string.stats_recipes_cooked),
-                                recipes.size.toString()
+                                otherChefRecipes.size.toString()
                             )
                             VerticalDivider(modifier = Modifier.height(40.dp))
                             ProfileStat("Followers", chef!!.followersCount.toString())
@@ -220,7 +226,7 @@ fun OtherChefProfileScreen(
                         )
                     }
 
-                    if (recipes.isEmpty()) {
+                    if (otherChefRecipes.isEmpty()) {
                         item {
                             Text(
                                 text = "No recipes shared yet.",
@@ -231,10 +237,11 @@ fun OtherChefProfileScreen(
                             )
                         }
                     } else {
-                        items(recipes) { recipe ->
+                        // CRITICAL FIX: Use items() instead of .forEach
+                        items(otherChefRecipes) { recipe ->
                             RecipeCard(
                                 recipe = recipe,
-                                onFavoriteToggle = { },
+                                onFavoriteToggle = { recipeViewModel.toggleFavorite(recipe) },
                                 onClick = {
                                     navController.navigate(
                                         NavGraph.RecipeDetail.createRoute(recipe.id)

@@ -1,12 +1,13 @@
 package es.uc3m.android.pockets_chef_app.ui.viewmodel
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore // <-- ADDED THIS
+import com.google.firebase.firestore.FirebaseFirestore
 import es.uc3m.android.pockets_chef_app.data.model.Ingredient
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import es.uc3m.android.pockets_chef_app.data.model.RecipeStep
@@ -16,10 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await // <-- ADDED THIS
-import android.net.Uri
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.tasks.await
 
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository = RecipeRepository(),
@@ -49,31 +49,12 @@ class RecipeViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // Expose current user ID so the UI can check ownership
     val currentUserId: String?
         get() = auth.currentUser?.uid
 
     init {
-        refreshRecipes()
         observeRecipesAndFavorites()
         observeMyRecipes()
-    }
-
-    fun refreshRecipes() {
-        val uid = auth.currentUser?.uid ?: return
-
-        viewModelScope.launch {
-            try {
-                recipeRepository.getLatestPublicRecipes().collect { recipes ->
-                    val favIds = userRepository.getFavoriteRecipeIdsFlow(uid).first()
-                    _recipesState.value = recipes.map { recipe ->
-                        recipe.copy(isFavorite = favIds.contains(recipe.id))
-                    }
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
-            }
-        }
     }
 
     private var recipesJobStarted = false
@@ -89,7 +70,7 @@ class RecipeViewModel(
             val favoritesFlow = if (uid != null) {
                 userRepository.getFavoriteRecipeIdsFlow(uid)
             } else {
-                MutableStateFlow(emptySet())
+                flowOf(emptySet())
             }
 
             combine(recipesFlow, favoritesFlow) { recipes, favIds ->
@@ -106,8 +87,15 @@ class RecipeViewModel(
         val uid = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {
-            recipeRepository.getRecipesByAuthor(uid).collect { recipes ->
-                _myRecipes.value = recipes.sortedByDescending { it.createdAt }
+            val recipesFlow = recipeRepository.getRecipesByAuthor(uid)
+            val favoritesFlow = userRepository.getFavoriteRecipeIdsFlow(uid)
+
+            combine(recipesFlow, favoritesFlow) { recipes, favIds ->
+                recipes.map { recipe ->
+                    recipe.copy(isFavorite = favIds.contains(recipe.id))
+                }.sortedByDescending { it.createdAt }
+            }.collect { combined ->
+                _myRecipes.value = combined
             }
         }
     }
@@ -120,8 +108,11 @@ class RecipeViewModel(
         val uid = auth.currentUser?.uid ?: return
         val newFavoriteStatus = !recipe.isFavorite
 
-        // Optimistically update UI immediately
+        // Optimistically update UI immediately in both states
         _recipesState.value = _recipesState.value.map {
+            if (it.id == recipe.id) it.copy(isFavorite = newFavoriteStatus) else it
+        }
+        _myRecipes.value = _myRecipes.value.map {
             if (it.id == recipe.id) it.copy(isFavorite = newFavoriteStatus) else it
         }
 
@@ -130,7 +121,6 @@ class RecipeViewModel(
         }
     }
 
-    // The update function
     fun updateRecipe(
         recipeId: String,
         title: String,
@@ -142,11 +132,29 @@ class RecipeViewModel(
         steps: List<RecipeStep>,
         isPublic: Boolean
     ) {
+        val updateLocally = { recipe: Recipe ->
+            if (recipe.id == recipeId) {
+                recipe.copy(
+                    title = title,
+                    description = description,
+                    duration = duration,
+                    servings = servings,
+                    category = category,
+                    ingredients = ingredients,
+                    steps = steps,
+                    isPublic = isPublic
+                )
+            } else {
+                recipe
+            }
+        }
+
+        _recipesState.value = _recipesState.value.map(updateLocally)
+        _myRecipes.value = _myRecipes.value.map(updateLocally)
+
         viewModelScope.launch {
             try {
                 val db = FirebaseFirestore.getInstance()
-
-                // Note: We don't update the authorId or createdAt fields
                 val updates = mapOf(
                     "title" to title,
                     "description" to description,
@@ -160,8 +168,6 @@ class RecipeViewModel(
 
                 db.collection("recipes").document(recipeId).update(updates).await()
                 _updateRecipeSuccess.value = true
-                refreshRecipes()
-
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to update recipe"
             }
@@ -169,12 +175,14 @@ class RecipeViewModel(
     }
 
     fun deleteRecipe(recipeId: String) {
+        _recipesState.value = _recipesState.value.filter { it.id != recipeId }
+        _myRecipes.value = _myRecipes.value.filter { it.id != recipeId }
+
         viewModelScope.launch {
             try {
                 val db = FirebaseFirestore.getInstance()
                 db.collection("recipes").document(recipeId).delete().await()
                 _deleteRecipeSuccess.value = true
-                refreshRecipes()
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to delete recipe"
             }
@@ -227,8 +235,16 @@ class RecipeViewModel(
                 val result = recipeRepository.createRecipeForUser(recipe, currentUser.uid)
 
                 if (result.isSuccess) {
+                    val newRecipeId = result.getOrNull() ?: ""
+
+                    val finalRecipe = recipe.copy(id = newRecipeId)
+
+                    if (isPublic) {
+                        _recipesState.value = listOf(finalRecipe) + _recipesState.value
+                    }
+                    _myRecipes.value = listOf(finalRecipe) + _myRecipes.value
+
                     _createRecipeSuccess.value = true
-                    refreshRecipes()
                 } else {
                     _errorMessage.value = result.exceptionOrNull()?.message
                 }
@@ -238,19 +254,8 @@ class RecipeViewModel(
         }
     }
 
-    fun clearCreateRecipeSuccess() {
-        _createRecipeSuccess.value = false
-    }
-
-    fun clearUpdateRecipeSuccess() {
-        _updateRecipeSuccess.value = false
-    }
-
-    fun clearDeleteRecipeSuccess() {
-        _deleteRecipeSuccess.value = false
-    }
-
-    fun clearError() {
-        _errorMessage.value = null
-    }
+    fun clearCreateRecipeSuccess() { _createRecipeSuccess.value = false }
+    fun clearUpdateRecipeSuccess() { _updateRecipeSuccess.value = false }
+    fun clearDeleteRecipeSuccess() { _deleteRecipeSuccess.value = false }
+    fun clearError() { _errorMessage.value = null }
 }

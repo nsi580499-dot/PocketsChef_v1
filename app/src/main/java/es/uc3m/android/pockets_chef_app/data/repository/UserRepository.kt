@@ -23,6 +23,12 @@ class UserRepository(
         Result.failure(e)
     }
 
+    fun getUserProfileFlow(uid: String): Flow<User?> {
+        return usersCollection.document(uid)
+            .snapshots()
+            .map { snapshot -> snapshot.toObject<User>() }
+    }
+
     suspend fun getUserProfile(uid: String): Result<User?> = try {
         val snapshot = usersCollection.document(uid).get().await()
         Result.success(snapshot.toObject<User>())

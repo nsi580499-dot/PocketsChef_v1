@@ -1,8 +1,6 @@
 package es.uc3m.android.pockets_chef_app.ui.viewmodel
 
 import android.content.Context
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import es.uc3m.android.pockets_chef_app.data.model.AppNotification
@@ -11,13 +9,14 @@ import es.uc3m.android.pockets_chef_app.data.model.User
 import es.uc3m.android.pockets_chef_app.data.repository.NotificationsRepository
 import es.uc3m.android.pockets_chef_app.data.repository.RecipeRepository
 import es.uc3m.android.pockets_chef_app.data.repository.UserRepository
-import es.uc3m.android.pockets_chef_app.notifications.NotificationHelper
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class OtherChefViewModel(
@@ -44,7 +43,6 @@ class OtherChefViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // Estado visual temporal para evitar el rebote del botón
     private val _followUiOverride = MutableStateFlow<Boolean?>(null)
     val followUiOverride: StateFlow<Boolean?> = _followUiOverride.asStateFlow()
 
@@ -61,12 +59,32 @@ class OtherChefViewModel(
 
         recipesJob?.cancel()
         recipesJob = viewModelScope.launch {
-            recipeRepository.getLatestPublicRecipes().collectLatest { allRecipes ->
-                _chefRecipes.value = allRecipes.filter { it.authorId == userId }
+            val favoritesFlow = if (myUid.isNotEmpty()) {
+                userRepository.getFavoriteRecipeIdsFlow(myUid)
+            } else {
+                flowOf(emptySet())
+            }
+
+            // If viewing own profile, show all recipes (including private). 
+            // Otherwise show only public recipes from that author.
+            val recipesFlow = if (myUid == userId && myUid.isNotEmpty()) {
+                recipeRepository.getRecipesByAuthor(userId)
+            } else {
+                recipeRepository.getLatestPublicRecipes().map { list ->
+                    list.filter { it.authorId == userId }
+                }
+            }
+
+            combine(recipesFlow, favoritesFlow) { recipes, favIds ->
+                recipes.map { recipe ->
+                    recipe.copy(isFavorite = favIds.contains(recipe.id))
+                }.sortedByDescending { it.createdAt }
+            }.collect { combined ->
+                _chefRecipes.value = combined
             }
         }
 
-        if (myUid != userId) {
+        if (myUid != userId && myUid.isNotEmpty()) {
             _followStateLoaded.value = false
             _followUiOverride.value = null
 
@@ -76,7 +94,6 @@ class OtherChefViewModel(
                     _isFollowing.value = following
                     _followStateLoaded.value = true
 
-                    // Si Firestore ya ha llegado al valor esperado, quitamos el override visual
                     val override = _followUiOverride.value
                     if (override != null && override == following) {
                         _followUiOverride.value = null
@@ -87,7 +104,7 @@ class OtherChefViewModel(
     }
 
     fun toggleFollow(myUid: String, targetUid: String, context: Context) {
-        if (myUid == targetUid) return
+        if (myUid == targetUid || myUid.isEmpty()) return
         if (_followActionInProgress.value) return
         if (!_followStateLoaded.value) return
 
@@ -96,7 +113,6 @@ class OtherChefViewModel(
             _errorMessage.value = null
 
             val wasFollowing = userRepository.isFollowingNow(myUid, targetUid)
-
             val result = userRepository.toggleFollowUser(
                 myUid = myUid,
                 targetUid = targetUid,
@@ -105,7 +121,6 @@ class OtherChefViewModel(
 
             if (result.isFailure) {
                 _errorMessage.value = result.exceptionOrNull()?.message
-                android.util.Log.e("FOLLOW_DEBUG", "ViewModel toggle failed", result.exceptionOrNull())
                 _followActionInProgress.value = false
                 return@launch
             }
@@ -132,7 +147,6 @@ class OtherChefViewModel(
             if (updatedProfile.isSuccess) {
                 _chefProfile.value = updatedProfile.getOrNull()
             }
-
             _followActionInProgress.value = false
         }
     }

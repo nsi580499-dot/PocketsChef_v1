@@ -198,6 +198,9 @@ fun PocketsChefNavHost(
     startDestination: String,
     modifier: Modifier = Modifier
 ) {
+
+    val sharedRecipeViewModel: es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -228,7 +231,8 @@ fun PocketsChefNavHost(
             // Call the Stateful Edit Screen
             EditRecipeScreen(
                 navController = navController,
-                recipeId = recipeId
+                recipeId = recipeId,
+                viewModel = sharedRecipeViewModel
             )
         }
 
@@ -256,19 +260,22 @@ fun PocketsChefNavHost(
         }
 
         composable(NavGraph.Home.route)    { HomeScreen(navController) }
-        composable(NavGraph.Recipes.route) { RecipesScreen(navController) }
+        composable(NavGraph.Recipes.route) {
+            RecipesScreen(navController, sharedRecipeViewModel) }
         composable(NavGraph.Pantry.route)  { PantryScreen(navController) }
         composable(NavGraph.Map.route)     { MapScreen(navController) }
-        composable(NavGraph.Profile.route) { ProfileScreen(navController) }
+        composable(NavGraph.Profile.route) {
+            ProfileScreen(navController, recipeViewModel = sharedRecipeViewModel) }
         composable(NavGraph.CookAI.route)  { CookAIScreen(navController) }
         composable(NavGraph.EditProfile.route) { EditProfileScreen(navController) }
-        composable(NavGraph.CreateRecipe.route) { CreateRecipeScreen(navController) }
+        composable(NavGraph.CreateRecipe.route) {
+            CreateRecipeScreen(navController, sharedRecipeViewModel) }
         composable(
             route = NavGraph.RecipeDetail.route,
             arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
-            RecipeDetailScreen(navController, recipeId)
+            RecipeDetailScreen(navController, recipeId, sharedRecipeViewModel)
         }
 
         composable(
@@ -276,7 +283,7 @@ fun PocketsChefNavHost(
             arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
-            CookingStepsScreen(navController, recipeId)
+            CookingStepsScreen(navController, recipeId, sharedRecipeViewModel)
         }
 
         composable(
@@ -284,7 +291,7 @@ fun PocketsChefNavHost(
             arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
-            OtherChefProfileScreen(navController, userId)
+            OtherChefProfileScreen(navController, userId, recipeViewModel = sharedRecipeViewModel)
         }
     }
 }

@@ -64,13 +64,25 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.lottie.compose)
-    
+
     // Google Maps
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.compose.ui.text)
 
+    // --- FIREBASE (Cleaned and Deduplicated) ---
+    implementation(platform(libs.firebase.bom))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-storage")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // --- GEMINI AI (Cleaned and Deduplicated) ---
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -78,19 +90,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.play.services.location)
-
-    // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.auth)
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-storage")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
-
-
-    implementation(libs.google.generativeai)
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
-
 }

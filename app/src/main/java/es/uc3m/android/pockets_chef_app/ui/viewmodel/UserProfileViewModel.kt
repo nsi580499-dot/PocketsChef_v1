@@ -5,13 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import es.uc3m.android.pockets_chef_app.data.model.User
+import es.uc3m.android.pockets_chef_app.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class UserProfileViewModel : ViewModel() {
+class UserProfileViewModel(
+    private val userRepository: UserRepository = UserRepository()) : ViewModel()
+{
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
@@ -31,24 +34,19 @@ class UserProfileViewModel : ViewModel() {
 
     fun loadProfile() {
         val uid = auth.currentUser?.uid ?: return
-
         viewModelScope.launch {
             try {
-                val snapshot = firestore.collection("users")
-                    .document(uid)
-                    .get()
-                    .await()
-
-                val loadedProfile = snapshot.toObject(User::class.java)
-                if (loadedProfile != null) {
-                    _profile.value = loadedProfile
+                // En lugar de get().await(), escuchamos en tiempo real
+                userRepository.getUserProfileFlow(uid).collect { loadedProfile ->
+                    if (loadedProfile != null) {
+                        _profile.value = loadedProfile
+                    }
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
             }
         }
     }
-
     fun saveProfile(
         name: String,
         description: String,

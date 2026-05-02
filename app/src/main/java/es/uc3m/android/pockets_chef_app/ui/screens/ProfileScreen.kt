@@ -28,29 +28,30 @@ import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
 import es.uc3m.android.pockets_chef_app.ui.components.PulsingCirclesBackground
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
-import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel // Usamos este en lugar de OtherChef
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
+import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
-    otherChefViewModel: OtherChefViewModel = viewModel()
+    userProfileViewModel: UserProfileViewModel = viewModel(),
+    recipeViewModel: RecipeViewModel = viewModel() // Instancia compartida inyectada
 ) {
     val scrollState = rememberScrollState()
-    val myUid = authViewModel.getCurrentUserUid() ?: ""
-    val userProfile by otherChefViewModel.chefProfile.collectAsState()
-    val myRecipes by otherChefViewModel.chefRecipes.collectAsState()
+    val userProfile by userProfileViewModel.profile.collectAsState()
 
-    LaunchedEffect(myUid) {
-        if (myUid.isNotEmpty()) {
-            otherChefViewModel.loadChef(myUid, myUid)
-        }
+    // Obtenemos "mis recetas" directamente del ViewModel global.
+    // Esto asegura que vengan con los likes actualizados y las eliminaciones reflejadas.
+    val myRecipes by recipeViewModel.myRecipes.collectAsState()
+
+    LaunchedEffect(Unit) {
+        userProfileViewModel.loadProfile()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // Pulsing circles background
         PulsingCirclesBackground()
 
         Column(
@@ -92,7 +93,7 @@ fun ProfileScreen(
                             )
                         }
                         UserAvatar(
-                            profileImageUrl = userProfile?.profileImageUrl,
+                            profileImageUrl = userProfile.profileImageUrl,
                             modifier = Modifier.size(100.dp),
                             iconPadding = 20
                         )
@@ -100,13 +101,13 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = userProfile?.displayName ?: stringResource(R.string.chef_fallback),
+                        text = userProfile.displayName.ifBlank { stringResource(R.string.chef_fallback) },
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
-                        text = userProfile?.email ?: "",
+                        text = userProfile.email,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                     )
@@ -121,7 +122,7 @@ fun ProfileScreen(
                 ) {
                     ProfileStat(stringResource(R.string.my_recipes), myRecipes.size.toString())
                     VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
-                    ProfileStat(stringResource(R.string.followers), userProfile?.followersCount?.toString() ?: "0")
+                    ProfileStat(stringResource(R.string.followers), userProfile.followersCount.toString())
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -144,8 +145,7 @@ fun ProfileScreen(
 
                 ProfileSectionTitle(stringResource(R.string.about_me_section))
                 Text(
-                    text = userProfile?.bio?.ifEmpty { stringResource(R.string.chef_bio_placeholder) }
-                        ?: stringResource(R.string.chef_bio_placeholder),
+                    text = userProfile.bio.ifEmpty { stringResource(R.string.chef_bio_placeholder) },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -154,7 +154,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 ProfileSectionTitle(stringResource(R.string.cooking_level_section))
-                val currentLevel = userProfile?.cookingLevel ?: "Beginner"
+                val currentLevel = userProfile.cookingLevel.ifBlank { "Beginner" }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -190,9 +190,9 @@ fun ProfileScreen(
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         myRecipes.forEach { recipe ->
-                            es.uc3m.android.pockets_chef_app.ui.components.RecipeCard(
+                            RecipeCard(
                                 recipe = recipe,
-                                onFavoriteToggle = { },
+                                onFavoriteToggle = { recipeViewModel.toggleFavorite(recipe) },
                                 onClick = {
                                     navController.navigate(NavGraph.RecipeDetail.createRoute(recipe.id))
                                 }
