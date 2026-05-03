@@ -219,7 +219,7 @@ fun ChatBubble(message: ChatMessage) {
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
             Text(
-                text = message.content,
+                text = parseMarkdown(message.content),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 fontSize = 15.sp,
                 color = contentColor
@@ -244,5 +244,59 @@ fun CookAIScreenPreview() {
             onSendMessage = {},
             onBackClick = {}
         )
+    }
+}
+
+
+fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
+    return androidx.compose.ui.text.buildAnnotatedString {
+        val lines = text.lines()
+        lines.forEachIndexed { lineIndex, line ->
+            // Remove markdown headers
+            val cleanLine = line
+                .removePrefix("### ")
+                .removePrefix("## ")
+                .removePrefix("# ")
+                .removePrefix("- ")
+                .removePrefix("* ")
+
+            // Parse bold and italic inline
+            var i = 0
+            while (i < cleanLine.length) {
+                when {
+                    cleanLine.startsWith("**", i) -> {
+                        val end = cleanLine.indexOf("**", i + 2)
+                        if (end != -1) {
+                            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold))
+                            append(cleanLine.substring(i + 2, end))
+                            pop()
+                            i = end + 2
+                        } else {
+                            append(cleanLine[i])
+                            i++
+                        }
+                    }
+                    cleanLine.startsWith("*", i) -> {
+                        val end = cleanLine.indexOf("*", i + 1)
+                        if (end != -1) {
+                            pushStyle(androidx.compose.ui.text.SpanStyle(
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            ))
+                            append(cleanLine.substring(i + 1, end))
+                            pop()
+                            i = end + 1
+                        } else {
+                            append(cleanLine[i])
+                            i++
+                        }
+                    }
+                    else -> {
+                        append(cleanLine[i])
+                        i++
+                    }
+                }
+            }
+            if (lineIndex < lines.size - 1) append("\n")
+        }
     }
 }
