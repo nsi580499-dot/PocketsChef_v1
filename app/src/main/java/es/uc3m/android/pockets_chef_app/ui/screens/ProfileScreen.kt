@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,25 +27,23 @@ import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.components.FloatingIngredientsBackground
 import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
+import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
+import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
-import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel // Usamos este en lugar de OtherChef
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
-import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
-import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
+import es.uc3m.android.pockets_chef_app.ui.components.InfoChip
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
     userProfileViewModel: UserProfileViewModel = viewModel(),
-    recipeViewModel: RecipeViewModel = viewModel() // Instancia compartida inyectada
+    recipeViewModel: RecipeViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
     val userProfile by userProfileViewModel.profile.collectAsState()
-
-    // Obtenemos "mis recetas" directamente del ViewModel global.
-    // Esto asegura que vengan con los likes actualizados y las eliminaciones reflejadas.
     val myRecipes by recipeViewModel.myRecipes.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -60,7 +59,6 @@ fun ProfileScreen(
                 .background(MaterialTheme.colorScheme.background.copy(alpha = 0.0f))
                 .verticalScroll(scrollState)
         ) {
-            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -79,10 +77,14 @@ fun ProfileScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         contentAlignment = Alignment.BottomEnd,
-                        modifier = Modifier.clickable { navController.navigate(NavGraph.EditProfile.route) }
+                        modifier = Modifier.clickable {
+                            navController.navigate(NavGraph.EditProfile.route)
+                        }
                     ) {
                         Surface(
-                            modifier = Modifier.size(100.dp).clip(CircleShape),
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape),
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         ) {
                             Icon(
@@ -92,6 +94,7 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(20.dp)
                             )
                         }
+
                         UserAvatar(
                             profileImageUrl = userProfile.profileImageUrl,
                             modifier = Modifier.size(100.dp),
@@ -100,28 +103,34 @@ fun ProfileScreen(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
                         text = userProfile.displayName.ifBlank { stringResource(R.string.chef_fallback) },
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+
                     Text(
                         text = userProfile.email,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
 
             Column(modifier = Modifier.padding(20.dp)) {
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     ProfileStat(stringResource(R.string.my_recipes), myRecipes.size.toString())
-                    VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
+                    VerticalDivider(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .padding(horizontal = 8.dp)
+                    )
                     ProfileStat(stringResource(R.string.followers), userProfile.followersCount.toString())
                 }
 
@@ -154,25 +163,47 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 ProfileSectionTitle(stringResource(R.string.cooking_level_section))
-                val currentLevel = userProfile.cookingLevel.ifBlank { "Beginner" }
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val levels = listOf(
-                        "Beginner" to R.string.cooking_level_beginner,
-                        "Intermediate" to R.string.cooking_level_intermediate,
-                        "Pro Chef" to R.string.cooking_level_pro
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                InfoChip(
+                    text = userProfile.cookingLevel.ifBlank { "Beginner" },
+                    backgroundColor = MaterialTheme.colorScheme.secondary,
+                    textColor = Color.White
+                )
+
+                if (userProfile.favoriteCuisine.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    ProfileSectionTitle("Favourite cuisine")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    InfoChip(
+                        text = userProfile.favoriteCuisine,
+                        backgroundColor = MaterialTheme.colorScheme.primary,
+                        textColor = Color.White
                     )
-                    levels.forEach { (level, resId) ->
-                        FilterChip(
-                            selected = currentLevel == level,
-                            onClick = { },
-                            label = { Text(stringResource(resId)) },
-                            leadingIcon = if (currentLevel == level) {
-                                { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
-                            } else null
-                        )
+                }
+
+                if (userProfile.dietaryPreferences.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    ProfileSectionTitle("Dietary preferences")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        userProfile.dietaryPreferences.forEach { preference ->
+                            InfoChip(
+                                text = preference,
+                                backgroundColor = MaterialTheme.colorScheme.tertiary,
+                                textColor = Color.White
+                            )
+                        }
                     }
                 }
 
@@ -194,7 +225,9 @@ fun ProfileScreen(
                                 recipe = recipe,
                                 onFavoriteToggle = { recipeViewModel.toggleFavorite(recipe) },
                                 onClick = {
-                                    navController.navigate(NavGraph.RecipeDetail.createRoute(recipe.id))
+                                    navController.navigate(
+                                        NavGraph.RecipeDetail.createRoute(recipe.id)
+                                    )
                                 }
                             )
                         }
@@ -223,6 +256,7 @@ fun ProfileScreen(
     }
 }
 
+
 @Composable
 fun ProfileSectionTitle(title: String) {
     Text(
@@ -236,5 +270,7 @@ fun ProfileSectionTitle(title: String) {
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    PocketsChefTheme { ProfileScreen(navController = rememberNavController()) }
+    PocketsChefTheme {
+        ProfileScreen(navController = rememberNavController())
+    }
 }
