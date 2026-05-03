@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="es.uc3m.android.pockets_chef_app" />
-                  <option name="mobileSdkAppId" value="1:551188337254:android:1c28dd860a6ea1013153a7" />
-                  <option name="projectId" value="uc3m-it-2026-16504-g01-96" />
-                  <option name="projectNumber" value="551188337254" />
+                  <option name="appId" value="PLACEHOLDER" />
+                  <option name="mobileSdkAppId" value="" />
+                  <option name="projectId" value="" />
+                  <option name="projectNumber" value="" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
