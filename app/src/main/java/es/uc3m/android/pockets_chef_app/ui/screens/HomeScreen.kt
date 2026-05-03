@@ -18,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,13 +38,13 @@ import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.HomeViewModel
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 import androidx.compose.foundation.layout.statusBarsPadding
-import es.uc3m.android.pockets_chef_app.ui.components.PulsingCirclesBackground
+import es.uc3m.android.pockets_chef_app.ui.components.FloatingIngredientsBackground
+
 @Composable
 fun HomeScreen(
     navController: NavController,
     homeViewModel: HomeViewModel = viewModel()
 ) {
-    // Collect state from ViewModel to pass it to the stateless Composable
     val otherChefs by homeViewModel.otherChefs.collectAsState()
     val expiringCount by homeViewModel.expiringItemsCount.collectAsState()
 
@@ -64,16 +63,19 @@ fun HomeScreen(
 ) {
     val scrollState = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        PulsingCirclesBackground()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        FloatingIngredientsBackground()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f))
                 .verticalScroll(scrollState)
-
-    ) {
-            // Elegant Header with Gradient
+        ) {
+            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -125,7 +127,6 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Social Section: Other Chefs
             SectionHeader(stringResource(R.string.discover_chefs))
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
@@ -143,7 +144,6 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Quick Actions Section
             SectionHeader(stringResource(R.string.quick_actions))
             Row(
                 modifier = Modifier
@@ -181,7 +181,6 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // CookAI Featured Card
             SectionHeader(stringResource(R.string.cookai))
             Card(
                 onClick = { navController.navigate(NavGraph.CookAI.route) },
@@ -238,7 +237,6 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Expiry Alerts Section
             SectionHeader(stringResource(R.string.expiring))
             Card(
                 modifier = Modifier

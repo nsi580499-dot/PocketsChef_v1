@@ -24,8 +24,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
+import es.uc3m.android.pockets_chef_app.ui.components.FloatingIngredientsBackground
 import es.uc3m.android.pockets_chef_app.ui.components.ProfileStat
-import es.uc3m.android.pockets_chef_app.ui.components.PulsingCirclesBackground
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel // Usamos este en lugar de OtherChef
@@ -52,12 +52,12 @@ fun ProfileScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        PulsingCirclesBackground()
+        FloatingIngredientsBackground()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f))
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.0f))
                 .verticalScroll(scrollState)
         ) {
             // Header
@@ -68,7 +68,7 @@ fun ProfileScreen(
                         brush = Brush.verticalGradient(
                             colors = listOf(
                                 MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.0f)
                             )
                         ),
                         shape = RoundedCornerShape(bottomEnd = 32.dp, bottomStart = 32.dp)
