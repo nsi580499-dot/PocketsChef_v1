@@ -1,22 +1,36 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
-import android.util.Patterns
-import androidx.compose.foundation.clickable
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,17 +39,35 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
+import coil.compose.AsyncImage
+import es.uc3m.android.pockets_chef_app.data.repository.ImageUploadHelper
+import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 import es.uc3m.android.pockets_chef_app.ui.util.cookingLevels
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
+import kotlinx.coroutines.launch
+import java.io.File
 
+private fun createCompleteProfileImageUri(context: Context): Uri {
+    val imageFile = File(context.cacheDir, "images/captured_${System.currentTimeMillis()}.jpg")
+    imageFile.parentFile?.mkdirs()
 
-private fun isValidUrl(url: String): Boolean {
-    return url.isBlank() || Patterns.WEB_URL.matcher(url).matches()
+    return androidx.core.content.FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        imageFile
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,6 +80,9 @@ fun CompleteProfileScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val profile by viewModel.profile.collectAsState()
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var name by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
     var level by rememberSaveable { mutableStateOf("Beginner") }
@@ -57,6 +92,61 @@ fun CompleteProfileScreen(
 
     var levelExpanded by rememberSaveable { mutableStateOf(false) }
     var hasInitialized by rememberSaveable { mutableStateOf(false) }
+
+    var isUploadingImage by remember { mutableStateOf(false) }
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && cameraImageUri != null) {
+            isUploadingImage = true
+            scope.launch {
+                val uploadResult = ImageUploadHelper.uploadUri(
+                    context = context,
+                    uri = cameraImageUri!!,
+                    folder = "profile_images"
+                )
+
+                if (uploadResult.isSuccess) {
+                    photoUrl = uploadResult.getOrNull() ?: photoUrl
+                }
+
+                isUploadingImage = false
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val uri = createCompleteProfileImageUri(context)
+            cameraImageUri = uri
+            cameraLauncher.launch(uri)
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            isUploadingImage = true
+            scope.launch {
+                val uploadResult = ImageUploadHelper.uploadUri(
+                    context = context,
+                    uri = uri,
+                    folder = "profile_images"
+                )
+
+                if (uploadResult.isSuccess) {
+                    photoUrl = uploadResult.getOrNull() ?: photoUrl
+                }
+
+                isUploadingImage = false
+            }
+        }
+    }
 
     LaunchedEffect(profile) {
         if (!hasInitialized && profile.uid.isNotBlank()) {
@@ -80,13 +170,8 @@ fun CompleteProfileScreen(
     val nameError = if (name.trim().isBlank()) "Name is required" else null
     val descriptionError =
         if (description.trim().length < 10) "Description must be at least 10 characters" else null
-    val photoUrlError =
-        if (!isValidUrl(photoUrl.trim())) "Enter a valid URL" else null
 
-    val isFormValid =
-        nameError == null &&
-                descriptionError == null &&
-                photoUrlError == null
+    val isFormValid = nameError == null && descriptionError == null && !isUploadingImage
 
     Scaffold { innerPadding ->
         Column(
@@ -101,8 +186,70 @@ fun CompleteProfileScreen(
         ) {
             Text(
                 text = "Complete your profile",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (photoUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = "Profile photo",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    UserAvatar(
+                        profileImageUrl = null,
+                        modifier = Modifier.size(100.dp),
+                        iconPadding = 20
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (isUploadingImage) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                    Text(
+                        text = "Uploading...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(
+                            onClick = {
+                                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Camera")
+                        }
+
+                        OutlinedButton(
+                            onClick = { galleryLauncher.launch("image/*") }
+                        ) {
+                            Icon(
+                                Icons.Default.Photo,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Gallery")
+                        }
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = name,
@@ -142,7 +289,7 @@ fun CompleteProfileScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { levelExpanded = true }
+                        .menuAnchor()
                 )
 
                 ExposedDropdownMenu(
@@ -160,18 +307,6 @@ fun CompleteProfileScreen(
                     }
                 }
             }
-
-            OutlinedTextField(
-                value = photoUrl,
-                onValueChange = { photoUrl = it },
-                label = { Text("Photo URL") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = photoUrlError != null,
-                supportingText = {
-                    if (photoUrlError != null) Text(photoUrlError)
-                }
-            )
 
             OutlinedTextField(
                 value = diet,
