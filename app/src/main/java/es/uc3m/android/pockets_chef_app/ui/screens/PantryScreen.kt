@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +30,7 @@ import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.theme.WarningAmber
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.PantryViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.ShoppingListViewModel
+import androidx.compose.ui.text.style.TextDecoration
 
 private data class CategoryInfo(val name: String, val resId: Int)
 
@@ -78,6 +78,7 @@ fun PantryScreenContent(
     var selectedCategory by remember { mutableStateOf("All") }
     var showAddDialog by remember { mutableStateOf(false) }
     var showShoppingList by remember { mutableStateOf(false) }
+
 
     val displayedItems = if (selectedCategory == "All") pantryItems
     else pantryItems.filter { it.category == selectedCategory }
@@ -322,23 +323,41 @@ fun PantryItemCard(item: PantryItem, onDelete: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                val isExpired = item.expiryDate < System.currentTimeMillis()
+
                 Text(
                     text = item.name,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    textDecoration = if (isExpired) TextDecoration.LineThrough else null,
+                    color = if (isExpired)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
+
                 Text(
                     text = "${item.quantity} ${item.unit}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = formatExpiry(item.expiryDate),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (item.isExpiringSoon) WarningAmber
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
+
+                if (isExpired) {
+                    Text(
+                        text = "EXPIRED",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = ErrorRed
+                    )
+                } else {
+                    Text(
+                        text = formatExpiry(item.expiryDate),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (item.isExpiringSoon) WarningAmber
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val categoryResId = categories.find { it.name == item.category }?.resId

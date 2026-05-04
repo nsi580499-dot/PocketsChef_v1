@@ -17,6 +17,7 @@ data class RecipeStep(
 data class Recipe(
     val id: String = "",
     val title: String = "",
+    val source: String = "", //this one is for testing
     val description: String = "",
     val duration: String = "",
     val servings: Int = 0,
@@ -35,3 +36,5 @@ data class Recipe(
     @ServerTimestamp
     val createdAt: Date? = null
 )
+
+val source: String = "" //this one is for testing
