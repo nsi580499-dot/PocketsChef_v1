@@ -1,13 +1,15 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit // <-- Added Edit Icon
+import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Timer
@@ -25,35 +27,39 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import es.uc3m.android.pockets_chef_app.R
+import es.uc3m.android.pockets_chef_app.data.model.Ingredient
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
-// import es.uc3m.android.pockets_chef_app.data.model.Ingredient // Ensure this is imported if needed!
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.ShoppingListViewModel
+import kotlinx.coroutines.launch
 
-// 1. STATEFUL WRAPPER
 @Composable
 fun RecipeDetailScreen(
     navController: NavController,
     recipeId: String,
-    viewModel: RecipeViewModel = viewModel()
+    viewModel: RecipeViewModel = viewModel(),
+    shoppingListViewModel: ShoppingListViewModel = viewModel()
 ) {
     val recipesList by viewModel.recipesState.collectAsState()
 
     val recipe = remember(recipesList, recipeId) {
-        recipesList.find { it.id == recipeId }
+        viewModel.getRecipeById(recipeId) ?: recipesList.find { it.id == recipeId }
     }
 
     val isLoading = recipesList.isEmpty()
-
-    // Check if the current logged-in user is the author of this recipe
     val currentUserId = viewModel.currentUserId
     val isCreator = recipe?.authorId == currentUserId
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     RecipeDetailScreenContent(
         recipe = recipe,
         isLoading = isLoading,
-        isCreator = isCreator, // Pass ownership state down
+        isCreator = isCreator,
+        snackbarHostState = snackbarHostState,
         onBackClick = { navController.popBackStack() },
         onHomeClick = {
             navController.navigate(NavGraph.Home.route) {
@@ -64,26 +70,32 @@ fun RecipeDetailScreen(
             navController.navigate(NavGraph.CookingSteps.createRoute(recipeId))
         },
         onEditClick = {
-            // Note: Make sure you have added an EditRecipe route to your NavGraph!
-            // E.g., NavGraph.EditRecipe.createRoute(recipeId)
             navController.navigate("edit_recipe/$recipeId")
+        },
+        onAddToShoppingList = { name, amount ->
+            shoppingListViewModel.addItem(name, amount)
+            scope.launch {
+                snackbarHostState.showSnackbar("$name added to shopping list")
+            }
         }
     )
 }
 
-// 2. STATELESS CONTENT
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailScreenContent(
     recipe: Recipe?,
     isLoading: Boolean,
-    isCreator: Boolean, // Added parameter
+    isCreator: Boolean,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onBackClick: () -> Unit,
     onHomeClick: () -> Unit,
     onStartCookingClick: () -> Unit,
-    onEditClick: () -> Unit // Added parameter
+    onEditClick: () -> Unit,
+    onAddToShoppingList: (name: String, amount: String) -> Unit = { _, _ -> }
 ) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             ElegantHeader(
                 title = recipe?.title ?: stringResource(R.string.browse_recipes),
@@ -98,7 +110,6 @@ fun RecipeDetailScreenContent(
                 },
                 actionContent = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // ONLY show the Edit button if they are the creator
                         if (isCreator) {
                             IconButton(onClick = onEditClick) {
                                 Icon(
@@ -125,11 +136,8 @@ fun RecipeDetailScreenContent(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator()
-                } else {
-                    Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
-                }
+                if (isLoading) CircularProgressIndicator()
+                else Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             Column(
@@ -138,7 +146,6 @@ fun RecipeDetailScreenContent(
                     .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Header Image/Color area
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -158,14 +165,13 @@ fun RecipeDetailScreenContent(
                 }
 
                 Column(modifier = Modifier.padding(20.dp)) {
-                    // Headline centered with fillMaxWidth()
                     Text(
                         text = recipe.title,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Text(
@@ -178,7 +184,6 @@ fun RecipeDetailScreenContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Quick Info Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -189,27 +194,46 @@ fun RecipeDetailScreenContent(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Ingredients Section
-                    Text(
-                        text = stringResource(R.string.ingredients_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    // Ingredients header with "Add all" button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ingredients_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Add all",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .clickable {
+                                    recipe.ingredients.forEach { ing ->
+                                        onAddToShoppingList(ing.name, ing.amount)
+                                    }
+                                }
+                                .padding(8.dp)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     recipe.ingredients.forEach { ingredient ->
-                        IngredientRow(ingredient.name, ingredient.amount)
+                        ShoppingIngredientRow(
+                            name = ingredient.name,
+                            amount = ingredient.amount,
+                            onAdd = { onAddToShoppingList(ingredient.name, ingredient.amount) }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Start Cooking Button
                     Button(
                         onClick = onStartCookingClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
@@ -222,6 +246,50 @@ fun RecipeDetailScreenContent(
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ShoppingIngredientRow(name: String, amount: String, onAdd: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = amount,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = onAdd,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AddShoppingCart,
+                    contentDescription = "Add to shopping list",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
@@ -275,7 +343,6 @@ fun IngredientRow(name: String, amount: String) {
     }
 }
 
-// 3. PERFECT PREVIEW
 @Preview(showBackground = true)
 @Composable
 fun RecipeDetailScreenPreview() {
@@ -283,22 +350,22 @@ fun RecipeDetailScreenPreview() {
         RecipeDetailScreenContent(
             recipe = Recipe(
                 id = "1",
-                authorId = "user123", // Mock author
+                authorId = "user123",
                 title = "Classic Spaghetti Carbonara",
                 category = "Italian",
-                description = "A creamy, rich, and authentic Italian pasta dish made with just a few simple ingredients.",
+                description = "A creamy, rich, and authentic Italian pasta dish.",
                 duration = "25 min",
                 servings = 2,
                 ingredients = listOf(
-                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Spaghetti", "200g"),
-                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Guanciale", "100g"),
-                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Pecorino Romano", "50g"),
-                    es.uc3m.android.pockets_chef_app.data.model.Ingredient("Large Eggs", "2")
+                    Ingredient("Spaghetti", "200g"),
+                    Ingredient("Guanciale", "100g"),
+                    Ingredient("Pecorino Romano", "50g"),
+                    Ingredient("Large Eggs", "2")
                 ),
                 steps = emptyList()
             ),
             isLoading = false,
-            isCreator = true, // Set to true in preview so you can see the Edit button!
+            isCreator = true,
             onBackClick = {},
             onHomeClick = {},
             onStartCookingClick = {},
