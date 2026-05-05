@@ -26,18 +26,18 @@ object NotificationHelper {
 
             val expiryChannel = NotificationChannel(
                 EXPIRY_CHANNEL_ID,
-                "Expiry Alerts",
+                context.getString(R.string.channel_expiry_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Alerts for pantry items expiring soon"
+                description = context.getString(R.string.channel_expiry_desc)
             }
 
             val followerChannel = NotificationChannel(
                 FOLLOWER_CHANNEL_ID,
-                "New Followers",
+                context.getString(R.string.channel_follower_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notifications for new followers"
+                description = context.getString(R.string.channel_follower_desc)
             }
 
             notificationManager.createNotificationChannel(expiryChannel)
@@ -60,11 +60,11 @@ object NotificationHelper {
 
     @androidx.annotation.RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
     fun sendExpiryNotification(context: Context, itemName: String, daysLeft: Int) {
-        val title = "⚠️ Item Expiring Soon"
+        val title = context.getString(R.string.notification_expiry_title)
         val content = when (daysLeft) {
-            0 -> "$itemName expires today!"
-            1 -> "$itemName expires tomorrow!"
-            else -> "$itemName expires in $daysLeft days"
+            0 -> context.getString(R.string.notification_expiry_today, itemName)
+            1 -> context.getString(R.string.notification_expiry_tomorrow, itemName)
+            else -> context.getString(R.string.notification_expiry_days, itemName, daysLeft)
         }
 
         val notification = NotificationCompat.Builder(context, EXPIRY_CHANNEL_ID)
@@ -85,8 +85,8 @@ object NotificationHelper {
     fun sendFollowerNotification(context: Context, followedChefName: String) {
         val notification = NotificationCompat.Builder(context, FOLLOWER_CHANNEL_ID)
             .setSmallIcon(R.drawable.logo_pocketschef)
-            .setContentTitle("👨‍🍳 Followed successfully")
-            .setContentText("You are now following $followedChefName.")
+            .setContentTitle(context.getString(R.string.notification_follower_title))
+            .setContentText(context.getString(R.string.notification_follower_msg, followedChefName))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(getPendingIntent(context))
             .setAutoCancel(true)

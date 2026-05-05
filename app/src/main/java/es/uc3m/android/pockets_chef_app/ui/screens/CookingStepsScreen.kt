@@ -75,13 +75,11 @@ fun CookingStepsScreenContent(
 ) {
     var currentStepIndex by remember { mutableIntStateOf(0) }
 
-    // Scaffold is the ROOT. No Column wrapped around it!
     Scaffold(
         topBar = {
-            // We use our ElegantHeader here instead of a standard TopAppBar!
             ElegantHeader(
                 title = recipe?.title ?: stringResource(R.string.browse_recipes),
-                subtitle = recipe?.category ?: "Let's get cooking",
+                subtitle = recipe?.category ?: stringResource(R.string.lets_get_cooking),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -111,7 +109,7 @@ fun CookingStepsScreenContent(
                 if (isLoading) {
                     CircularProgressIndicator()
                 } else {
-                    Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
+                    Text(text = stringResource(R.string.recipe_not_found), style = MaterialTheme.typography.bodyLarge)
                 }
             }
         } else if (recipe.steps.isEmpty()) {
@@ -119,7 +117,7 @@ fun CookingStepsScreenContent(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "Steps not available", style = MaterialTheme.typography.bodyLarge)
+                Text(text = stringResource(R.string.steps_not_available), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             val step = recipe.steps[currentStepIndex]
@@ -127,7 +125,7 @@ fun CookingStepsScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding) // This padding prevents the content from hiding behind the header!
+                    .padding(innerPadding)
             ) {
                 Column(
                     modifier = Modifier
@@ -144,7 +142,7 @@ fun CookingStepsScreenContent(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "Step ${step.order} of ${recipe.steps.size}",
+                            text = stringResource(R.string.step_progress, step.order, recipe.steps.size),
                             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             style = MaterialTheme.typography.titleLarge,
@@ -192,7 +190,7 @@ fun CookingStepsScreenContent(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Previous")
+                        Text(stringResource(R.string.previous))
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -209,7 +207,7 @@ fun CookingStepsScreenContent(
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         val isLast = currentStepIndex == recipe.steps.size - 1
-                        Text(if (isLast) "Finish" else "Next")
+                        Text(if (isLast) stringResource(R.string.finish) else stringResource(R.string.next))
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             if (isLast) Icons.Default.Check else Icons.AutoMirrored.Filled.ArrowForward,
@@ -223,7 +221,6 @@ fun CookingStepsScreenContent(
 }
 
 // REUSABLE ELEGANT HEADER COMPONENT
-// Keep this in this file for now, or move it to your SharedComponents.kt
 @Composable
 fun ElegantHeader(
     title: String,

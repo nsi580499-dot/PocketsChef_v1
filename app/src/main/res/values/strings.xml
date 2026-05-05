@@ -44,10 +44,14 @@
     <string name="add_button">Add</string>
     <string name="cancel_button">Cancel</string>
     <string name="expired">Expired</string>
+    <string name="expired_caps">EXPIRED</string>
     <string name="expires_today">Expires today!</string>
     <string name="expires_tomorrow">Expires tomorrow</string>
     <string name="expires_in_days">Expires in %1$d days</string>
     <string name="unit_units">units</string>
+    <string name="shopping_list_title">Shopping List</string>
+    <string name="shopping_list_empty">No items yet.\nAdd ingredients from a recipe!</string>
+    <string name="shopping_list_desc">Shopping List</string>
 
     <!-- Categories -->
     <string name="category_all">All</string>
@@ -72,6 +76,8 @@
     <string name="recipe_duration_servings">%1$s · %2$d servings</string>
     <string name="toggle_favorite_desc">Toggle favorite</string>
     <string name="add_recipe_desc">Add recipe</string>
+    <string name="cookai_tab">CookAI</string>
+    <string name="no_cookai_recipes">No CookAI recipes saved yet</string>
 
     <!-- Profile Screen -->
     <string name="profile_title">Profile</string>
@@ -100,6 +106,12 @@
     <string name="no_recipes_published">You haven\'t published any recipes yet.</string>
     <string name="logout">Log out</string>
     <string name="chef_fallback">Chef</string>
+    <string name="profile_photo_desc">Profile photo</string>
+    <string name="uploading_label">Uploading...</string>
+    <string name="camera_label">Camera</string>
+    <string name="gallery_label">Gallery</string>
+    <string name="fav_cuisine_section">Favourite Cuisine</string>
+    <string name="diet_pref_section">Dietary Preferences</string>
 
     <!-- Edit Profile Screen -->
     <string name="edit_profile_title">Edit profile</string>
@@ -110,16 +122,23 @@
     <string name="cooking_level_label">Cooking level</string>
     <string name="photo_url_label">Photo URL</string>
     <string name="photo_url_invalid">Enter a valid URL</string>
-    <string name="diet_pref_label">Diet preferences (comma separated)</string>
+    <string name="diet_pref_label">Diet preferences</string>
     <string name="fav_cuisine_label">Favourite cuisine</string>
     <string name="save_changes_btn">Save changes</string>
 
     <!-- CookAI Screen -->
-    <string name="cookai_greeting">Hello Chef! I\'m CookAI. How can I help you today?</string>
+    <string name="cookai_greeting">Hello %1$s! I\'m CookAI. How can I help you today?</string>
     <string name="cookai_placeholder">Ask something...</string>
     <string name="cookai_back_desc">Back</string>
     <string name="cookai_send_desc">Send</string>
     <string name="cookai_ai_response">That sounds interesting! Let me think about a recipe with that...</string>
+    <string name="recipe_saved_msg">Recipe saved to CookAI tab!</string>
+    <string name="save_to_cookai_btn">Save to CookAI Recipes</string>
+    <string name="ai_role">model</string>
+    <string name="user_role">user</string>
+    <string name="saving_recipe">Saving...</string>
+    <string name="cookai_fallback_title">CookAI Recipe</string>
+    <string name="see_instructions">See instructions</string>
 
     <!-- Recipe Detail Screen -->
     <string name="ingredients_title">Ingredients</string>
@@ -129,6 +148,10 @@
     <string name="home">Home</string>
     <string name="recipe_not_found">Recipe not found</string>
     <string name="servings_count">%1$d servings</string>
+    <string name="edit_recipe_desc">Edit Recipe</string>
+    <string name="add_all_ingredients">Add all</string>
+    <string name="add_to_shopping_list_desc">Add to shopping list</string>
+    <string name="item_added_to_shopping_list">%1$s added to shopping list</string>
 
     <!-- Home Screen -->
     <string name="items_expiring_soon_msg">You have %1$d items expiring soon!</string>
@@ -138,17 +161,20 @@
     <!-- Cooking Steps Screen -->
     <string name="steps_not_available">Steps not available</string>
     <string name="step_label">Step %1$d</string>
+    <string name="step_progress">Step %1$d of %2$d</string>
     <string name="previous">Previous</string>
     <string name="next">Next</string>
     <string name="finish">Finish</string>
+    <string name="lets_get_cooking">Let\'s get cooking</string>
 
     <!-- Map Screen -->
     <string name="searching_nearby_stores">Searching nearby stores...</string>
     <string name="stores_found_nearby">%1$d stores found nearby</string>
     <string name="close">Close</string>
 
-    <!-- Create Recipe Screen -->
+    <!-- Create/Edit Recipe Screen -->
     <string name="create_recipe_title">Create Recipe</string>
+    <string name="edit_recipe_title">Edit Recipe</string>
     <string name="title_label">Title</string>
     <string name="title_required">Title is required</string>
     <string name="description_label">Description</string>
@@ -167,5 +193,55 @@
     <string name="step_required">Add at least 1 step</string>
     <string name="add_step_btn">Add step</string>
     <string name="upload_recipe_btn">Upload recipe</string>
+    <string name="update_recipe_btn">Update recipe</string>
+    <string name="delete_recipe_btn">Delete recipe</string>
+    <string name="delete_recipe_confirm">Are you sure you want to delete this recipe?</string>
+    <string name="delete_recipe_title">Delete Recipe</string>
     <string name="ingredient_count_label">Ingredient %1$d</string>
+    <string name="recipe_saved_success">Recipe saved!</string>
+    <string name="recipe_name_section">Recipe Name</string>
+    <string name="cooking_steps_section">Cooking Steps</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="recipe_image_label">Recipe image</string>
+
+    <!-- Notifications -->
+    <string name="notification_expiry_title">⚠️ Item Expiring Soon</string>
+    <string name="notification_expiry_today">%1$s expires today!</string>
+    <string name="notification_expiry_tomorrow">%1$s expires tomorrow!</string>
+    <string name="notification_expiry_days">%1$s expires in %2$d days</string>
+    <string name="notification_follower_title">👨‍🍳 Followed successfully</string>
+    <string name="notification_follower_msg">You are now following %1$s.</string>
+    <string name="channel_expiry_name">Expiry Alerts</string>
+    <string name="channel_expiry_desc">Alerts for pantry items expiring soon</string>
+    <string name="channel_follower_name">New Followers</string>
+    <string name="channel_follower_desc">Notifications for new followers</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_count">%1$d notifications</string>
+    <string name="new_follower_title">👨‍🍳 New Follower!</string>
+    <string name="new_follower_msg">%1$s started following you.</string>
+    <string name="expiry_alert_title">⚠️ Expiry Alert</string>
+    <string name="expiry_alert_msg">%1$s expires tomorrow!</string>
+    <string name="no_notifications_msg">You don\'t have notifications yet.</string>
+
+    <!-- ViewModel & Repository -->
+    <string name="error_load_profile">Failed to load user profile</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_something_went_wrong">Sorry, something went wrong: %1$s</string>
+    <string name="no_recipes_found_context">No relevant recipes were found.</string>
+    <string name="relevant_recipes_header">Here is relevant recipe information from Pockets Chef:\n</string>
+
+    <!-- Other Profile -->
+    <string name="following_btn">Following</string>
+    <string name="follow_btn">Follow</string>
+    <string name="chef_recipes_title">%1$s\'s Recipes</string>
+    <string name="chef_no_recipes">%1$s hasn\'t published any recipes yet.</string>
+    <string name="profile_completed_title">Profile Completed!</string>
+    <string name="profile_completed_msg">You\'re all set to start your cooking journey.</string>
+    <string name="get_started_btn">Get Started</string>
+    <string name="complete_profile_title">Complete Your Profile</string>
+    <string name="complete_profile_subtitle">Tell us a bit about yourself to personalize your experience.</string>
+    <string name="followed_label">Followed</string>
+    <string name="follow_chef_label">Follow Chef</string>
+    <string name="loading_label">Loading...</string>
+    <string name="no_recipes_shared">No recipes shared yet.</string>
 </resources>

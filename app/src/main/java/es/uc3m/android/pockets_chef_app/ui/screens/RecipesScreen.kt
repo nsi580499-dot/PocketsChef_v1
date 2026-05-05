@@ -39,8 +39,6 @@ fun RecipesScreen(
         recipesList = recipesList,
         searchQuery = viewModel.searchQuery,
         onSearchQueryChange = { viewModel.searchQuery = it },
-        showFavoritesOnly = viewModel.showFavoritesOnly,
-        onShowFavoritesChange = { viewModel.showFavoritesOnly = it },
         onAddRecipeClick = { navController.navigate(NavGraph.CreateRecipe.route) },
         onRecipeClick = { id -> navController.navigate(NavGraph.RecipeDetail.createRoute(id)) },
         onFavoriteToggle = { recipe -> viewModel.toggleFavorite(recipe) }
@@ -52,14 +50,18 @@ fun RecipesScreenContent(
     recipesList: List<Recipe>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    showFavoritesOnly: Boolean,
-    onShowFavoritesChange: (Boolean) -> Unit,
     onAddRecipeClick: () -> Unit,
     onRecipeClick: (String) -> Unit,
     onFavoriteToggle: (Recipe) -> Unit
 ) {
-    val displayedRecipes = remember(recipesList, showFavoritesOnly, searchQuery) {
-        val base = if (showFavoritesOnly) recipesList.filter { it.isFavorite } else recipesList
+    var selectedTab by remember { mutableIntStateOf(0) } // 0=All, 1=Favorites, 2=CookAI
+
+    val displayedRecipes = remember(recipesList, selectedTab, searchQuery) {
+        val base = when (selectedTab) {
+            1 -> recipesList.filter { it.isFavorite }
+            2 -> recipesList.filter { it.source == "cookai" }
+            else -> recipesList.filter { it.source != "cookai" }
+        }
         if (searchQuery.isBlank()) base
         else base.filter { it.title.contains(searchQuery, ignoreCase = true) }
     }
@@ -77,7 +79,6 @@ fun RecipesScreenContent(
             }
         },
         topBar = {
-            // Elegant Header with Gradient
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,7 +119,6 @@ fun RecipesScreenContent(
                 }
             }
         }
-
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -127,36 +127,44 @@ fun RecipesScreenContent(
         ) {
 
             TabRow(
-                selectedTabIndex = if (showFavoritesOnly) 1 else 0,
+                selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.background,
                 contentColor = MaterialTheme.colorScheme.primary,
                 indicator = { tabPositions ->
                     TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[if (showFavoritesOnly) 1 else 0]),
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
             ) {
                 Tab(
-                    selected = !showFavoritesOnly,
-                    onClick = { onShowFavoritesChange(false) },
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
                     text = { Text(stringResource(R.string.all_recipes_tab), fontWeight = FontWeight.Bold) }
                 )
                 Tab(
-                    selected = showFavoritesOnly,
-                    onClick = { onShowFavoritesChange(true) },
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
                     text = { Text(stringResource(R.string.favorites_tab), fontWeight = FontWeight.Bold) }
+                )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = { Text(stringResource(R.string.cookai_tab), fontWeight = FontWeight.Bold) }
                 )
             }
 
             if (displayedRecipes.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (recipesList.isEmpty()) {
+                    if (recipesList.isEmpty() && searchQuery.isBlank()) {
                         CircularProgressIndicator()
                     } else {
                         Text(
-                            text = if (showFavoritesOnly) stringResource(R.string.no_favorites_message)
-                            else stringResource(R.string.no_recipes_found_message),
+                            text = when (selectedTab) {
+                                1 -> stringResource(R.string.no_favorites_message)
+                                2 -> stringResource(R.string.no_cookai_recipes)
+                                else -> stringResource(R.string.no_recipes_found_message)
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
@@ -193,8 +201,6 @@ fun RecipesScreenPreview() {
             ),
             searchQuery = "",
             onSearchQueryChange = {},
-            showFavoritesOnly = false,
-            onShowFavoritesChange = {},
             onAddRecipeClick = {},
             onRecipeClick = {},
             onFavoriteToggle = {}

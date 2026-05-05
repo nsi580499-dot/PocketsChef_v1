@@ -160,7 +160,7 @@ fun EditProfileScreen(
                 if (photoUrl.isNotBlank()) {
                     AsyncImage(
                         model = photoUrl,
-                        contentDescription = "Profile photo",
+                        contentDescription = stringResource(R.string.profile_photo_desc),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(100.dp)
@@ -179,7 +179,7 @@ fun EditProfileScreen(
                 if (isUploadingImage) {
                     CircularProgressIndicator(modifier = Modifier.size(32.dp))
                     Text(
-                        text = "Uploading...",
+                        text = stringResource(R.string.uploading_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -196,7 +196,7 @@ fun EditProfileScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Camera")
+                            Text(stringResource(R.string.camera_label))
                         }
                         OutlinedButton(
                             onClick = { galleryLauncher.launch("image/*") }
@@ -207,7 +207,7 @@ fun EditProfileScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Gallery")
+                            Text(stringResource(R.string.gallery_label))
                         }
                     }
                 }

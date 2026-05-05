@@ -275,7 +275,7 @@ fun SignUpScreen(
         if (password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Las contraseñas no coinciden",
+                text = stringResource(R.string.passwords_do_not_match),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )

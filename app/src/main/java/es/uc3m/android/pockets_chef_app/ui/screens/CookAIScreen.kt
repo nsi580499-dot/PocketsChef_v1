@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,44 +33,29 @@ fun CookAIScreen(
     viewModel: CookAIViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val recipeSaved by viewModel.recipeSaved.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    val isSaving by viewModel.recipeSaved.collectAsState() // Using recipeSaved as a proxy for isSaving if not explicitly provided
 
-    // Automatically scroll to the latest message
     LaunchedEffect(viewModel.messages.size) {
         if (viewModel.messages.isNotEmpty()) {
             listState.animateScrollToItem(viewModel.messages.size - 1)
         }
     }
 
-    CookAIScreenContent(
-        messages = viewModel.messages,
-        inputText = inputText,
-        uiState = uiState,
-        listState = listState,
-        onInputTextChange = { inputText = it },
-        onSendMessage = {
-            if (inputText.isNotBlank()) {
-                viewModel.sendMessage(inputText)
-                inputText = ""
-            }
-        },
-        onBackClick = { navController.popBackStack() }
-    )
-}
+    // Show snackbar when recipe is saved
+    val snackbarHostState = remember { SnackbarHostState() }
+    val savedMessage = stringResource(R.string.recipe_saved_msg)
+    LaunchedEffect(recipeSaved) {
+        if (recipeSaved) {
+            snackbarHostState.showSnackbar(savedMessage)
+            viewModel.clearRecipeSaved()
+        }
+    }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CookAIScreenContent(
-    messages: List<ChatMessage>,
-    inputText: String,
-    uiState: CookAIUiState,
-    listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
-    onInputTextChange: (String) -> Unit,
-    onSendMessage: () -> Unit,
-    onBackClick: () -> Unit
-) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -104,7 +89,7 @@ fun CookAIScreenContent(
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     }
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.cookai_back_desc),
@@ -127,7 +112,7 @@ fun CookAIScreenContent(
                     }
                     is CookAIUiState.Error -> {
                         Text(
-                            text = uiState.message,
+                            text = (uiState as CookAIUiState.Error).message,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier
                                 .align(Alignment.Center)
@@ -143,15 +128,19 @@ fun CookAIScreenContent(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(vertical = 16.dp)
                         ) {
-                            items(messages) { message ->
-                                ChatBubble(message)
+                            items(viewModel.messages) { message ->
+                                ChatBubble(
+                                    message = message,
+                                    showSaveButton = message.role == stringResource(R.string.ai_role) &&
+                                            viewModel.containsRecipe(message.content),
+                                    onSave = { viewModel.saveRecipeFromMessage(message.content) }
+                                )
                             }
                         }
                     }
                 }
             }
 
-            // Input area
             Surface(
                 tonalElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
@@ -165,7 +154,7 @@ fun CookAIScreenContent(
                 ) {
                     OutlinedTextField(
                         value = inputText,
-                        onValueChange = onInputTextChange,
+                        onValueChange = { inputText = it },
                         placeholder = { Text(stringResource(R.string.cookai_placeholder)) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(24.dp),
@@ -174,7 +163,12 @@ fun CookAIScreenContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
-                        onClick = onSendMessage,
+                        onClick = {
+                            if (inputText.isNotBlank()) {
+                                viewModel.sendMessage(inputText)
+                                inputText = ""
+                            }
+                        },
                         enabled = inputText.isNotBlank() && uiState is CookAIUiState.Ready,
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -194,8 +188,12 @@ fun CookAIScreenContent(
 }
 
 @Composable
-fun ChatBubble(message: ChatMessage) {
-    val isUser = message.role == "user"
+fun ChatBubble(
+    message: ChatMessage,
+    showSaveButton: Boolean = false,
+    onSave: () -> Unit = {}
+) {
+    val isUser = message.role == stringResource(R.string.user_role)
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
     val containerColor =
         if (isUser) MaterialTheme.colorScheme.primaryContainer
@@ -204,55 +202,59 @@ fun ChatBubble(message: ChatMessage) {
         if (isUser) MaterialTheme.colorScheme.onPrimaryContainer
         else MaterialTheme.colorScheme.onSecondaryContainer
 
-    Box(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = alignment
+        horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
-        Surface(
-            color = containerColor,
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 0.dp,
-                bottomEnd = if (isUser) 0.dp else 16.dp
-            ),
-            modifier = Modifier.widthIn(max = 280.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = alignment
         ) {
-            Text(
-                text = parseMarkdown(message.content),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                fontSize = 15.sp,
-                color = contentColor
-            )
+            Surface(
+                color = containerColor,
+                shape = RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
+                    bottomStart = if (isUser) 16.dp else 0.dp,
+                    bottomEnd = if (isUser) 0.dp else 16.dp
+                ),
+                modifier = Modifier.widthIn(max = 280.dp)
+            ) {
+                Text(
+                    text = parseMarkdown(message.content),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    fontSize = 15.sp,
+                    color = contentColor
+                )
+            }
+        }
+
+        if (showSaveButton) {
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedButton(
+                onClick = onSave,
+                modifier = Modifier.padding(start = 4.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.BookmarkAdd,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.save_to_cookai_btn),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun CookAIScreenPreview() {
-    PocketsChefTheme {
-        CookAIScreenContent(
-            messages = listOf(
-                ChatMessage(role = "model", content = "Hi! I'm CookAI. What can I help you with today?"),
-                ChatMessage(role = "user", content = "I want to make carbonara."),
-                ChatMessage(role = "model", content = "Great choice! Do you have eggs and guanciale?")
-            ),
-            inputText = "Yes, I do.",
-            uiState = CookAIUiState.Ready,
-            onInputTextChange = {},
-            onSendMessage = {},
-            onBackClick = {}
-        )
-    }
-}
-
 
 fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
     return androidx.compose.ui.text.buildAnnotatedString {
         val lines = text.lines()
         lines.forEachIndexed { lineIndex, line ->
-            // Remove markdown headers
             val cleanLine = line
                 .removePrefix("### ")
                 .removePrefix("## ")
@@ -260,7 +262,6 @@ fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
                 .removePrefix("- ")
                 .removePrefix("* ")
 
-            // Parse bold and italic inline
             var i = 0
             while (i < cleanLine.length) {
                 when {
@@ -279,9 +280,11 @@ fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
                     cleanLine.startsWith("*", i) -> {
                         val end = cleanLine.indexOf("*", i + 1)
                         if (end != -1) {
-                            pushStyle(androidx.compose.ui.text.SpanStyle(
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                            ))
+                            pushStyle(
+                                androidx.compose.ui.text.SpanStyle(
+                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                )
+                            )
                             append(cleanLine.substring(i + 1, end))
                             pop()
                             i = end + 1

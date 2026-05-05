@@ -16,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.Ingredient
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import es.uc3m.android.pockets_chef_app.data.model.RecipeStep
@@ -77,7 +79,7 @@ fun EditRecipeScreenContent(
     recipe: Recipe,
     errorMessage: String?,
     onBackClick: () -> Unit,
-    onUpdateClick: (String, String, String, Int, String, List<Ingredient>, List<RecipeStep>, Boolean) -> Unit, // Fixed: Added missing comma
+    onUpdateClick: (String, String, String, Int, String, List<Ingredient>, List<RecipeStep>, Boolean) -> Unit,
     onDeleteClick: () -> Unit
 ) {
     var title by remember { mutableStateOf(recipe.title) }
@@ -102,15 +104,15 @@ fun EditRecipeScreenContent(
     Scaffold(
         topBar = {
             ElegantHeader(
-                title = "Edit Recipe",
+                title = stringResource(R.string.edit_recipe_title),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 actionContent = {
                     IconButton(onClick = { showDeleteConfirm = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             )
@@ -126,11 +128,11 @@ fun EditRecipeScreenContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // RENAME SECTION
-            Text("Recipe Name", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.title_label), style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Title") },
+                label = { Text(stringResource(R.string.title_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -139,7 +141,7 @@ fun EditRecipeScreenContent(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") },
+                label = { Text(stringResource(R.string.description_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
@@ -149,7 +151,7 @@ fun EditRecipeScreenContent(
                 OutlinedTextField(
                     value = duration,
                     onValueChange = { duration = it },
-                    label = { Text("Duration") },
+                    label = { Text(stringResource(R.string.duration_label)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
@@ -157,57 +159,57 @@ fun EditRecipeScreenContent(
                 OutlinedTextField(
                     value = servings,
                     onValueChange = { servings = it.filter(Char::isDigit) },
-                    label = { Text("Servings") },
+                    label = { Text(stringResource(R.string.servings_label)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
 
-            // INGREDIENTS SECTION[cite: 1]
-            Text("Ingredients", style = MaterialTheme.typography.titleMedium)
+            // INGREDIENTS SECTION
+            Text(stringResource(R.string.ingredients_title), style = MaterialTheme.typography.titleMedium)
             ingredients.forEachIndexed { index, ingredient ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = ingredient.name,
                         onValueChange = { ingredients[index] = ingredient.copy(name = it) },
                         modifier = Modifier.weight(1f),
-                        label = { Text("Name") }
+                        label = { Text(stringResource(R.string.ingredient_name_placeholder)) }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
                         value = ingredient.amount,
                         onValueChange = { ingredients[index] = ingredient.copy(amount = it) },
                         modifier = Modifier.weight(0.5f),
-                        label = { Text("Amount") }
+                        label = { Text(stringResource(R.string.ingredient_amount_placeholder)) }
                     )
                     IconButton(onClick = { if (ingredients.size > 1) ingredients.removeAt(index) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                     }
                 }
             }
             TextButton(onClick = { ingredients.add(Ingredient("", "")) }) {
                 Icon(Icons.Default.Add, contentDescription = null)
-                Text("Add ingredient")
+                Text(stringResource(R.string.add_ingredient_btn))
             }
 
-            // STEPS SECTION[cite: 1]
-            Text("Cooking Steps", style = MaterialTheme.typography.titleMedium)
+            // STEPS SECTION
+            Text(stringResource(R.string.steps_title), style = MaterialTheme.typography.titleMedium)
             steps.forEachIndexed { index, step ->
                 Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "Step ${index + 1}", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                            Text(text = stringResource(R.string.step_label, index + 1), modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
                             if (steps.size > 1) {
                                 IconButton(onClick = { steps.removeAt(index) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Remove Step", tint = MaterialTheme.colorScheme.error)
+                                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
                                 }
                             }
                         }
                         OutlinedTextField(
                             value = step.description,
                             onValueChange = { steps[index] = step.copy(description = it, order = index + 1) },
-                            label = { Text("Instruction") },
+                            label = { Text(stringResource(R.string.instructions_label)) },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 2
                         )
@@ -218,7 +220,7 @@ fun EditRecipeScreenContent(
             TextButton(onClick = { steps.add(RecipeStep(steps.size + 1, "")) }) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Add Step")
+                Text(stringResource(R.string.add_step_btn))
             }
 
             errorMessage?.let {
@@ -234,10 +236,10 @@ fun EditRecipeScreenContent(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 enabled = isFormValid
             ) {
-                Text("Save Changes")
+                Text(stringResource(R.string.save_changes_btn))
             }
 
-            // PERMANENT DELETE BUTTON[cite: 1]
+            // PERMANENT DELETE BUTTON
             OutlinedButton(
                 onClick = { showDeleteConfirm = true },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -246,28 +248,28 @@ fun EditRecipeScreenContent(
             ) {
                 Icon(Icons.Default.Delete, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Permanently Delete Recipe")
+                Text(stringResource(R.string.delete_recipe_btn))
             }
         }
     } // Scaffold End
 
-    // Confirmation Dialog[cite: 1]
+    // Confirmation Dialog
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Recipe?") },
-            text = { Text("This action cannot be undone. Are you sure you want to remove '${recipe.title}'?") },
+            title = { Text(stringResource(R.string.delete_recipe_title)) },
+            text = { Text(stringResource(R.string.delete_recipe_confirm)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDeleteClick()
                     showDeleteConfirm = false
                 }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )

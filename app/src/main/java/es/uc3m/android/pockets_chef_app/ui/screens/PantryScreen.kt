@@ -34,7 +34,8 @@ import androidx.compose.ui.text.style.TextDecoration
 
 private data class CategoryInfo(val name: String, val resId: Int)
 
-private val categories = listOf(
+@Composable
+private fun getCategories() = listOf(
     CategoryInfo("All", R.string.category_all),
     CategoryInfo("Dairy", R.string.category_dairy),
     CategoryInfo("Meat", R.string.category_meat),
@@ -75,10 +76,11 @@ fun PantryScreenContent(
     onDeleteShoppingItem: (ShoppingItem) -> Unit = {},
     onBackClick: () -> Unit
 ) {
+    val allCategory = stringResource(R.string.category_all)
     var selectedCategory by remember { mutableStateOf("All") }
     var showAddDialog by remember { mutableStateOf(false) }
     var showShoppingList by remember { mutableStateOf(false) }
-
+    val categories = getCategories()
 
     val displayedItems = if (selectedCategory == "All") pantryItems
     else pantryItems.filter { it.category == selectedCategory }
@@ -106,7 +108,7 @@ fun PantryScreenContent(
                     ) {
                         Icon(
                             Icons.Default.ShoppingCart,
-                            contentDescription = "Shopping List",
+                            contentDescription = stringResource(R.string.shopping_list_desc),
                             tint = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
@@ -211,7 +213,7 @@ fun ShoppingListContent(
             .padding(bottom = 32.dp)
     ) {
         Text(
-            text = "Shopping List",
+            text = stringResource(R.string.shopping_list_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -225,7 +227,7 @@ fun ShoppingListContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No items yet.\nAdd ingredients from a recipe!",
+                    text = stringResource(R.string.shopping_list_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -299,7 +301,7 @@ fun ShoppingListItem(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.delete),
                     tint = ErrorRed.copy(alpha = 0.7f),
                     modifier = Modifier.size(20.dp)
                 )
@@ -345,7 +347,7 @@ fun PantryItemCard(item: PantryItem, onDelete: () -> Unit) {
 
                 if (isExpired) {
                     Text(
-                        text = "EXPIRED",
+                        text = stringResource(R.string.expired_caps),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = ErrorRed
@@ -360,6 +362,7 @@ fun PantryItemCard(item: PantryItem, onDelete: () -> Unit) {
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val categories = getCategories()
                 val categoryResId = categories.find { it.name == item.category }?.resId
                     ?: R.string.category_all
                 SuggestionChip(
@@ -389,9 +392,11 @@ fun AddPantryItemDialog(onDismiss: () -> Unit, onConfirm: (PantryItem) -> Unit) 
     var name by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("1") }
     var unit by remember { mutableStateOf("") }
-    if (unit.isEmpty()) unit = stringResource(R.string.unit_units)
+    val defaultUnit = stringResource(R.string.unit_units)
+    if (unit.isEmpty()) unit = defaultUnit
     var selectedCategoryName by remember { mutableStateOf("Vegetables") }
     var daysUntilExpiry by remember { mutableStateOf("7") }
+    val categories = getCategories()
     val itemCategories = categories.filter { it.name != "All" }
 
     AlertDialog(

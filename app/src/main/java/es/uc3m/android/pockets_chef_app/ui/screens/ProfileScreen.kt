@@ -167,7 +167,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 InfoChip(
-                    text = userProfile.cookingLevel.ifBlank { "Beginner" },
+                    text = userProfile.cookingLevel.ifBlank { stringResource(R.string.cooking_level_beginner) },
                     backgroundColor = MaterialTheme.colorScheme.secondary,
                     textColor = Color.White
                 )
@@ -175,7 +175,7 @@ fun ProfileScreen(
                 if (userProfile.favoriteCuisine.isNotBlank()) {
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    ProfileSectionTitle("Favourite cuisine")
+                    ProfileSectionTitle(stringResource(R.string.fav_cuisine_section))
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -189,7 +189,7 @@ fun ProfileScreen(
                 if (userProfile.dietaryPreferences.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    ProfileSectionTitle("Dietary preferences")
+                    ProfileSectionTitle(stringResource(R.string.diet_pref_section))
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -239,7 +239,7 @@ fun ProfileScreen(
                 Button(
                     onClick = {
                         authViewModel.logout()
-                        navController.navigate("login") { popUpTo(0) }
+                        navController.navigate(NavGraph.Login.route) { popUpTo(0) }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
