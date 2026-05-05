@@ -55,7 +55,6 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 
-
 @Composable
 fun OtherChefProfileScreen(
     navController: NavController,
@@ -65,7 +64,6 @@ fun OtherChefProfileScreen(
     recipeViewModel: RecipeViewModel = viewModel()
 ) {
     val chef by viewModel.chefProfile.collectAsState()
-    val recipes by viewModel.chefRecipes.collectAsState()
     val isFollowing by viewModel.isFollowing.collectAsState()
     val followUiOverride by viewModel.followUiOverride.collectAsState()
     val effectiveIsFollowing = followUiOverride ?: isFollowing
@@ -94,7 +92,6 @@ fun OtherChefProfileScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         if (chef == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -104,7 +101,6 @@ fun OtherChefProfileScreen(
             }
         } else {
             Column(modifier = Modifier.fillMaxSize()) {
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -170,7 +166,7 @@ fun OtherChefProfileScreen(
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(18.dp),
                                         strokeWidth = 2.dp,
-                                        color = if (isFollowing) {
+                                        color = if (effectiveIsFollowing) {
                                             MaterialTheme.colorScheme.onPrimary
                                         } else {
                                             MaterialTheme.colorScheme.primary
@@ -188,9 +184,9 @@ fun OtherChefProfileScreen(
 
                                 Text(
                                     text = when {
-                                        !followStateLoaded -> "Loading..."
-                                        effectiveIsFollowing -> "Followed"
-                                        else -> "Follow Chef"
+                                        !followStateLoaded -> stringResource(R.string.loading_label)
+                                        effectiveIsFollowing -> stringResource(R.string.followed_label)
+                                        else -> stringResource(R.string.follow_chef_label)
                                     }
                                 )
                             }
@@ -213,13 +209,13 @@ fun OtherChefProfileScreen(
                                 otherChefRecipes.size.toString()
                             )
                             VerticalDivider(modifier = Modifier.height(40.dp))
-                            ProfileStat("Followers", chef!!.followersCount.toString())
+                            ProfileStat(stringResource(R.string.followers), chef!!.followersCount.toString())
                         }
                     }
 
                     item {
                         Text(
-                            text = "Chef's Recipes",
+                            text = stringResource(R.string.chef_recipes_title, chef!!.displayName),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
@@ -229,7 +225,7 @@ fun OtherChefProfileScreen(
                     if (otherChefRecipes.isEmpty()) {
                         item {
                             Text(
-                                text = "No recipes shared yet.",
+                                text = stringResource(R.string.no_recipes_shared),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                 modifier = Modifier.fillMaxWidth(),
@@ -237,8 +233,7 @@ fun OtherChefProfileScreen(
                             )
                         }
                     } else {
-                        // CRITICAL FIX: Use items() instead of .forEach
-                        items(otherChefRecipes) { recipe ->
+                        items(otherChefRecipes, key = { it.id }) { recipe ->
                             RecipeCard(
                                 recipe = recipe,
                                 onFavoriteToggle = { recipeViewModel.toggleFavorite(recipe) },
@@ -262,7 +257,7 @@ fun OtherChefProfileScreen(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.back),
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }
@@ -279,7 +274,7 @@ fun OtherChefProfileScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Home,
-                contentDescription = "Home",
+                contentDescription = stringResource(R.string.home),
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }

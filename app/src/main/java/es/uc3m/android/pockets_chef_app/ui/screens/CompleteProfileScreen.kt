@@ -48,10 +48,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.repository.ImageUploadHelper
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
 import es.uc3m.android.pockets_chef_app.ui.util.cookingLevels
@@ -167,9 +169,9 @@ fun CompleteProfileScreen(
         }
     }
 
-    val nameError = if (name.trim().isBlank()) "Name is required" else null
+    val nameError = if (name.trim().isBlank()) stringResource(R.string.name_required) else null
     val descriptionError =
-        if (description.trim().length < 10) "Description must be at least 10 characters" else null
+        if (description.trim().length < 10) stringResource(R.string.desc_min_length) else null
 
     val isFormValid = nameError == null && descriptionError == null && !isUploadingImage
 
@@ -185,7 +187,7 @@ fun CompleteProfileScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Complete your profile",
+                text = stringResource(R.string.complete_profile_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -197,7 +199,7 @@ fun CompleteProfileScreen(
                 if (photoUrl.isNotBlank()) {
                     AsyncImage(
                         model = photoUrl,
-                        contentDescription = "Profile photo",
+                        contentDescription = stringResource(R.string.profile_photo_desc),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(100.dp)
@@ -216,7 +218,7 @@ fun CompleteProfileScreen(
                 if (isUploadingImage) {
                     CircularProgressIndicator(modifier = Modifier.size(32.dp))
                     Text(
-                        text = "Uploading...",
+                        text = stringResource(R.string.uploading_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -233,7 +235,7 @@ fun CompleteProfileScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Camera")
+                            Text(stringResource(R.string.camera_label))
                         }
 
                         OutlinedButton(
@@ -245,7 +247,7 @@ fun CompleteProfileScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Gallery")
+                            Text(stringResource(R.string.gallery_label))
                         }
                     }
                 }
@@ -254,7 +256,7 @@ fun CompleteProfileScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text(stringResource(R.string.name_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = nameError != null,
@@ -266,7 +268,7 @@ fun CompleteProfileScreen(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") },
+                label = { Text(stringResource(R.string.desc_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 isError = descriptionError != null,
@@ -283,7 +285,7 @@ fun CompleteProfileScreen(
                     value = level,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Cooking level") },
+                    label = { Text(stringResource(R.string.cooking_level_label)) },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded)
                     },
@@ -311,7 +313,7 @@ fun CompleteProfileScreen(
             OutlinedTextField(
                 value = diet,
                 onValueChange = { diet = it },
-                label = { Text("Diet preferences (comma separated)") },
+                label = { Text(stringResource(R.string.diet_pref_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -319,7 +321,7 @@ fun CompleteProfileScreen(
             OutlinedTextField(
                 value = favoriteCuisine,
                 onValueChange = { favoriteCuisine = it },
-                label = { Text("Favourite cuisine") },
+                label = { Text(stringResource(R.string.fav_cuisine_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -347,7 +349,7 @@ fun CompleteProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isFormValid
             ) {
-                Text("Save profile")
+                Text(stringResource(R.string.save_changes_btn))
             }
         }
     }
