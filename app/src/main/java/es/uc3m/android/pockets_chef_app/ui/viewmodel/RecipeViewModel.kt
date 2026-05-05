@@ -83,20 +83,26 @@ class RecipeViewModel(
 
     private fun observeRecipesAndFavorites(uid: String?) {
         recipesJob = viewModelScope.launch {
-            val recipesFlow = recipeRepository.getLatestPublicRecipes()
-            val favoritesFlow = if (uid != null) {
-                userRepository.getFavoriteRecipeIdsFlow(uid)
-            } else {
-                flowOf(emptySet())
-            }
-
-            combine(recipesFlow, favoritesFlow) { recipes, favIds ->
-                recipes.map { recipe ->
-                    recipe.copy(isFavorite = favIds.contains(recipe.id))
+            try {
+                val recipesFlow = recipeRepository.getLatestPublicRecipes()
+                val favoritesFlow = if (uid != null) {
+                    userRepository.getFavoriteRecipeIdsFlow(uid)
+                } else {
+                    flowOf(emptySet())
                 }
-            }.collect { combinedList ->
-                _recipesState.value = combinedList
+
+                combine(recipesFlow, favoritesFlow) { recipes, favIds ->
+                    recipes.map { recipe ->
+                        recipe.copy(isFavorite = favIds.contains(recipe.id))
+                    }
+                }.collect { combinedList ->
+                    _recipesState.value = combinedList
+                    _isLoadingRecipes.value = false
+                }
+            } catch (e: Exception) {
+                _recipesState.value = emptyList()
                 _isLoadingRecipes.value = false
+                _errorMessage.value = e.message ?: "Failed to load recipes"
             }
         }
     }
@@ -108,15 +114,20 @@ class RecipeViewModel(
         }
 
         myRecipesJob = viewModelScope.launch {
-            val recipesFlow = recipeRepository.getRecipesByAuthor(uid)
-            val favoritesFlow = userRepository.getFavoriteRecipeIdsFlow(uid)
+            try {
+                val recipesFlow = recipeRepository.getRecipesByAuthor(uid)
+                val favoritesFlow = userRepository.getFavoriteRecipeIdsFlow(uid)
 
-            combine(recipesFlow, favoritesFlow) { recipes, favIds ->
-                recipes.map { recipe ->
-                    recipe.copy(isFavorite = favIds.contains(recipe.id))
-                }.sortedByDescending { it.createdAt }
-            }.collect { combined ->
-                _myRecipes.value = combined
+                combine(recipesFlow, favoritesFlow) { recipes, favIds ->
+                    recipes.map { recipe ->
+                        recipe.copy(isFavorite = favIds.contains(recipe.id))
+                    }.sortedByDescending { it.createdAt }
+                }.collect { combined ->
+                    _myRecipes.value = combined
+                }
+            } catch (e: Exception) {
+                _myRecipes.value = emptyList()
+                _errorMessage.value = e.message ?: "Failed to load my recipes"
             }
         }
     }
