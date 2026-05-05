@@ -34,20 +34,23 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
 import es.uc3m.android.pockets_chef_app.ui.components.InfoChip
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.ShoppingListViewModel
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
     userProfileViewModel: UserProfileViewModel = viewModel(),
-    recipeViewModel: RecipeViewModel = viewModel()
+    recipeViewModel: RecipeViewModel = viewModel(),
+    shoppingListViewModel: ShoppingListViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
     val userProfile by userProfileViewModel.profile.collectAsState()
     val myRecipes by recipeViewModel.myRecipes.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(authViewModel.getCurrentUserUid()) {
         userProfileViewModel.loadProfile()
+        recipeViewModel.refreshForCurrentUser()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -238,8 +241,14 @@ fun ProfileScreen(
 
                 Button(
                     onClick = {
+                        recipeViewModel.clearData()
+                        userProfileViewModel.clearData()
+                        shoppingListViewModel.clearData()
                         authViewModel.logout()
-                        navController.navigate(NavGraph.Login.route) { popUpTo(0) }
+
+                        navController.navigate(NavGraph.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(

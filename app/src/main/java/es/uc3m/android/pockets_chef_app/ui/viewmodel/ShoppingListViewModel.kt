@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import es.uc3m.android.pockets_chef_app.data.model.ShoppingItem
 import es.uc3m.android.pockets_chef_app.data.repository.ShoppingListRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,13 +21,30 @@ class ShoppingListViewModel(
     private val _items = MutableStateFlow<List<ShoppingItem>>(emptyList())
     val items: StateFlow<List<ShoppingItem>> = _items.asStateFlow()
 
+    private var shoppingJob: Job? = null
+    private var currentObservedUid: String? = null
+
     init {
-        loadItems()
+        refreshForCurrentUser()
     }
 
-    private fun loadItems() {
-        val uid = auth.currentUser?.uid ?: return
-        viewModelScope.launch {
+    // 🔥 ESTA ES LA CLAVE
+    fun refreshForCurrentUser() {
+        val uid = auth.currentUser?.uid
+
+        if (currentObservedUid == uid) return
+
+        shoppingJob?.cancel()
+        currentObservedUid = uid
+        _items.value = emptyList()
+
+        if (uid != null) {
+            startObservingShoppingList(uid)
+        }
+    }
+
+    private fun startObservingShoppingList(uid: String) {
+        shoppingJob = viewModelScope.launch {
             repository.getShoppingList(uid).collectLatest {
                 _items.value = it
             }
@@ -52,5 +70,13 @@ class ShoppingListViewModel(
         viewModelScope.launch {
             repository.deleteItem(uid, item.id)
         }
+    }
+
+    // 🔥 LIMPIAR AL LOGOUT
+    fun clearData() {
+        shoppingJob?.cancel()
+        shoppingJob = null
+        currentObservedUid = null
+        _items.value = emptyList()
     }
 }

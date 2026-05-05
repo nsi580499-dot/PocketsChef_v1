@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.Job
 
 class UserProfileViewModel(
     private val userRepository: UserRepository = UserRepository()) : ViewModel()
@@ -18,6 +19,8 @@ class UserProfileViewModel(
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+    private var profileJob: Job? = null
+    private var currentObservedUid: String? = null
 
     private val _profile = MutableStateFlow(User())
     val profile: StateFlow<User> = _profile.asStateFlow()
@@ -33,14 +36,20 @@ class UserProfileViewModel(
     }
 
     fun loadProfile() {
-        val uid = auth.currentUser?.uid ?: return
-        viewModelScope.launch {
+        val uid = auth.currentUser?.uid
+
+        if (currentObservedUid == uid) return
+
+        profileJob?.cancel()
+        currentObservedUid = uid
+        _profile.value = User()
+
+        if (uid == null) return
+
+        profileJob = viewModelScope.launch {
             try {
-                // En lugar de get().await(), escuchamos en tiempo real
                 userRepository.getUserProfileFlow(uid).collect { loadedProfile ->
-                    if (loadedProfile != null) {
-                        _profile.value = loadedProfile
-                    }
+                    _profile.value = loadedProfile ?: User()
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
@@ -91,5 +100,14 @@ class UserProfileViewModel(
 
     fun clearSaveSuccess() {
         _saveSuccess.value = false
+    }
+
+    fun clearData() {
+        profileJob?.cancel()
+        profileJob = null
+        currentObservedUid = null
+        _profile.value = User()
+        _saveSuccess.value = false
+        _errorMessage.value = null
     }
 }

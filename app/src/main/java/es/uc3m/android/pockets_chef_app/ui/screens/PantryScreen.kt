@@ -31,6 +31,7 @@ import es.uc3m.android.pockets_chef_app.ui.theme.WarningAmber
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.PantryViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.ShoppingListViewModel
 import androidx.compose.ui.text.style.TextDecoration
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.AuthViewModel
 
 private data class CategoryInfo(val name: String, val resId: Int)
 
@@ -48,11 +49,18 @@ private fun getCategories() = listOf(
 fun PantryScreen(
     navController: NavController,
     viewModel: PantryViewModel = viewModel(),
-    shoppingListViewModel: ShoppingListViewModel = viewModel()
+    shoppingListViewModel: ShoppingListViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val pantryItems by viewModel.itemsState.collectAsState()
     val shoppingItems by shoppingListViewModel.items.collectAsState()
     val context = LocalContext.current
+    val currentUid = authViewModel.getCurrentUserUid()
+
+    LaunchedEffect(currentUid) {
+        viewModel.refreshForCurrentUser()
+        shoppingListViewModel.refreshForCurrentUser()
+    }
 
     PantryScreenContent(
         pantryItems = pantryItems,

@@ -34,9 +34,13 @@ fun RecipesScreen(
     viewModel: RecipeViewModel = viewModel()
 ) {
     val recipesList by viewModel.recipesState.collectAsState()
-
+    val isLoadingRecipes by viewModel.isLoadingRecipes.collectAsState()
+    LaunchedEffect(viewModel.currentUserId) {
+        viewModel.refreshForCurrentUser()
+    }
     RecipesScreenContent(
         recipesList = recipesList,
+        isLoadingRecipes = isLoadingRecipes,
         searchQuery = viewModel.searchQuery,
         onSearchQueryChange = { viewModel.searchQuery = it },
         onAddRecipeClick = { navController.navigate(NavGraph.CreateRecipe.route) },
@@ -48,6 +52,7 @@ fun RecipesScreen(
 @Composable
 fun RecipesScreenContent(
     recipesList: List<Recipe>,
+    isLoadingRecipes: Boolean,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onAddRecipeClick: () -> Unit,
@@ -152,13 +157,14 @@ fun RecipesScreenContent(
 
             if (displayedRecipes.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (recipesList.isEmpty() && searchQuery.isBlank()) {
+                    if (isLoadingRecipes && selectedTab == 0) {
                         CircularProgressIndicator()
                     } else {
                         Text(
-                            text = when (selectedTab) {
-                                1 -> stringResource(R.string.no_favorites_message)
-                                else -> stringResource(R.string.no_recipes_found_message)
+                            text = if (selectedTab == 1) {
+                                stringResource(R.string.no_favorites_message)
+                            } else {
+                                stringResource(R.string.no_recipes_found_message)
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -184,21 +190,4 @@ fun RecipesScreenContent(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun RecipesScreenPreview() {
-    PocketsChefTheme {
-        RecipesScreenContent(
-            recipesList = listOf(
-                Recipe(id = "1", title = "Pasta Carbonara", isFavorite = true),
-                Recipe(id = "2", title = "Chicken Salad", isFavorite = false),
-                Recipe(id = "3", title = "Vegetable Stir Fry", isFavorite = false)
-            ),
-            searchQuery = "",
-            onSearchQueryChange = {},
-            onAddRecipeClick = {},
-            onRecipeClick = {},
-            onFavoriteToggle = {}
-        )
-    }
-}
+

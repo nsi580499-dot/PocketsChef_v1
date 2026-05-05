@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.Job
 
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository = RecipeRepository(),
@@ -27,6 +28,9 @@ class RecipeViewModel(
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
+    private var recipesJob: Job? = null
+    private var myRecipesJob: Job? = null
+    private var currentObservedUid: String? = null
 
     var searchQuery by mutableStateOf("")
     var showFavoritesOnly by mutableStateOf(false)
@@ -48,23 +52,36 @@ class RecipeViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
+    private val _isLoadingRecipes = MutableStateFlow(true)
+    val isLoadingRecipes: StateFlow<Boolean> = _isLoadingRecipes.asStateFlow()
     val currentUserId: String?
         get() = auth.currentUser?.uid
 
     init {
-        observeRecipesAndFavorites()
-        observeMyRecipes()
+        refreshForCurrentUser()
     }
 
-    private var recipesJobStarted = false
-
-    private fun observeRecipesAndFavorites() {
-        if (recipesJobStarted) return
-        recipesJobStarted = true
-
+    fun refreshForCurrentUser() {
         val uid = auth.currentUser?.uid
 
+        if (currentObservedUid == uid) return
+
+        recipesJob?.cancel()
+        myRecipesJob?.cancel()
+
+        currentObservedUid = uid
+        _recipesState.value = emptyList()
+        _myRecipes.value = emptyList()
+        _isLoadingRecipes.value = true
+
+        searchQuery = ""
+        showFavoritesOnly = false
+
+        observeRecipesAndFavorites(uid)
+        observeMyRecipes(uid)
+    }
+
+    private fun observeRecipesAndFavorites(uid: String?) {
         viewModelScope.launch {
             val recipesFlow = recipeRepository.getLatestPublicRecipes()
             val favoritesFlow = if (uid != null) {
@@ -83,8 +100,11 @@ class RecipeViewModel(
         }
     }
 
-    private fun observeMyRecipes() {
-        val uid = auth.currentUser?.uid ?: return
+    private fun observeMyRecipes(uid: String?) {
+        if (uid == null) {
+            _myRecipes.value = emptyList()
+            return
+        }
 
         viewModelScope.launch {
             val recipesFlow = recipeRepository.getRecipesByAuthor(uid)
@@ -258,4 +278,16 @@ class RecipeViewModel(
     fun clearUpdateRecipeSuccess() { _updateRecipeSuccess.value = false }
     fun clearDeleteRecipeSuccess() { _deleteRecipeSuccess.value = false }
     fun clearError() { _errorMessage.value = null }
+
+    fun clearData() {
+        currentObservedUid = null
+        searchQuery = ""
+        showFavoritesOnly = false
+        _recipesState.value = emptyList()
+        _myRecipes.value = emptyList()
+        _createRecipeSuccess.value = false
+        _updateRecipeSuccess.value = false
+        _deleteRecipeSuccess.value = false
+        _errorMessage.value = null
+    }
 }

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 
 class PantryViewModel(
     private val repository: PantryRepository = PantryRepository(),
@@ -23,6 +24,8 @@ class PantryViewModel(
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
+    private var pantryJob: Job? = null
+    private var currentObservedUid: String? = null
 
     private val _items = MutableStateFlow<List<PantryItem>>(emptyList())
     val itemsState: StateFlow<List<PantryItem>> = _items.asStateFlow()
@@ -33,30 +36,45 @@ class PantryViewModel(
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     init {
-        startObservingPantry()
+        refreshForCurrentUser()
     }
 
-    private fun startObservingPantry() {
-        val currentUser = auth.currentUser ?: return
-        viewModelScope.launch {
-//            repository.getPantryItems(currentUser.uid).collectLatest { list ->
-//                _items.value = list
-//            }
-            repository.getPantryItems(currentUser.uid).collectLatest { list ->
+    fun refreshForCurrentUser() {
+        val currentUser = auth.currentUser
+
+        if (currentObservedUid == currentUser?.uid) return
+
+        pantryJob?.cancel()
+        currentObservedUid = currentUser?.uid
+        _items.value = emptyList()
+
+        if (currentUser != null) {
+            startObservingPantry(currentUser.uid)
+        }
+    }
+
+    private fun startObservingPantry(uid: String) {
+        pantryJob = viewModelScope.launch {
+            repository.getPantryItems(uid).collectLatest { list ->
                 val currentTime = System.currentTimeMillis()
-                // 5 days in milliseconds
                 val fiveDaysInMillis = 5L * 24 * 60 * 60 * 1000
 
-                // Map the list to update the 'isExpiringSoon' status dynamically
                 val updatedList = list.map { item ->
                     val diff = item.expiryDate - currentTime
-                    // Mark as true if it expires in less than 5 days
                     item.copy(isExpiringSoon = diff > 0 && diff < fiveDaysInMillis)
                 }
 
                 _items.value = updatedList
             }
         }
+    }
+
+    fun clearData() {
+        pantryJob?.cancel()
+        pantryJob = null
+        currentObservedUid = null
+        _items.value = emptyList()
+        _errorMessage.value = null
     }
 
     fun addItem(item: PantryItem, context: Context) {
