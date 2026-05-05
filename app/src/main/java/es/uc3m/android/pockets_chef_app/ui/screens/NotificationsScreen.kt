@@ -19,10 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.AppNotification
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.NotificationsViewModel
 import java.text.SimpleDateFormat
@@ -54,13 +56,13 @@ fun NotificationsScreen(
             ) {
                 Column {
                     Text(
-                        text = "Notifications",
+                        text = stringResource(R.string.notifications_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
-                        text = "${notifications.size} notifications",
+                        text = stringResource(R.string.notifications_count, notifications.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
@@ -77,7 +79,7 @@ fun NotificationsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "You don't have notifications yet.",
+                        text = stringResource(R.string.no_notifications_msg),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -110,7 +112,7 @@ fun NotificationsScreen(
         ) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.back),
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }

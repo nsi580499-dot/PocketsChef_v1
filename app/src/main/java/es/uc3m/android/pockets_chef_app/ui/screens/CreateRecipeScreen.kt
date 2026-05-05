@@ -265,7 +265,7 @@ fun CreateRecipeScreenContent(
             }
 
             // Image picker section
-            Text(text = "Recipe image", style = MaterialTheme.typography.titleMedium)
+            Text(text = stringResource(R.string.recipe_image_label), style = MaterialTheme.typography.titleMedium)
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
@@ -276,7 +276,7 @@ fun CreateRecipeScreenContent(
                 ) {
                     Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Camera")
+                    Text(stringResource(R.string.camera_label))
                 }
                 OutlinedButton(
                     onClick = { imagePickerLauncher.launch("image/*") },
@@ -284,14 +284,14 @@ fun CreateRecipeScreenContent(
                 ) {
                     Icon(Icons.Default.Photo, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Gallery")
+                    Text(stringResource(R.string.gallery_label))
                 }
             }
 
             selectedImageUri?.let { uriString ->
                 AsyncImage(
                     model = uriString,
-                    contentDescription = "Selected recipe image",
+                    contentDescription = stringResource(R.string.recipe_image_label),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()

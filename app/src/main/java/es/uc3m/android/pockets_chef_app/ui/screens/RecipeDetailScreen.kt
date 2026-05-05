@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,6 +55,7 @@ fun RecipeDetailScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     RecipeDetailScreenContent(
         recipe = recipe,
@@ -75,7 +77,9 @@ fun RecipeDetailScreen(
         onAddToShoppingList = { name, amount ->
             shoppingListViewModel.addItem(name, amount)
             scope.launch {
-                snackbarHostState.showSnackbar("$name added to shopping list")
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.item_added_to_shopping_list, name)
+                )
             }
         }
     )
@@ -114,7 +118,7 @@ fun RecipeDetailScreenContent(
                             IconButton(onClick = onEditClick) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit Recipe",
+                                    contentDescription = stringResource(R.string.edit_recipe_desc),
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
@@ -137,7 +141,7 @@ fun RecipeDetailScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 if (isLoading) CircularProgressIndicator()
-                else Text(text = "Recipe not found", style = MaterialTheme.typography.bodyLarge)
+                else Text(text = stringResource(R.string.recipe_not_found), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             Column(
@@ -189,7 +193,7 @@ fun RecipeDetailScreenContent(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         InfoItem(icon = Icons.Default.Timer, label = recipe.duration)
-                        InfoItem(icon = Icons.Default.Restaurant, label = "${recipe.servings} servings")
+                        InfoItem(icon = Icons.Default.Restaurant, label = stringResource(R.string.servings_count, recipe.servings))
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -206,7 +210,7 @@ fun RecipeDetailScreenContent(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Add all",
+                            text = stringResource(R.string.add_all_ingredients),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
@@ -286,7 +290,7 @@ fun ShoppingIngredientRow(name: String, amount: String, onAdd: () -> Unit) {
             ) {
                 Icon(
                     imageVector = Icons.Default.AddShoppingCart,
-                    contentDescription = "Add to shopping list",
+                    contentDescription = stringResource(R.string.add_to_shopping_list_desc),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
