@@ -11,9 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import es.uc3m.android.pockets_chef_app.data.model.PantryItem
+import es.uc3m.android.pockets_chef_app.data.repository.PantryRepository
 
 class ShoppingListViewModel(
-    private val repository: ShoppingListRepository = ShoppingListRepository()
+    private val repository: ShoppingListRepository = ShoppingListRepository(),
+    private val pantryRepository: PantryRepository = PantryRepository()
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
@@ -43,6 +46,8 @@ class ShoppingListViewModel(
         }
     }
 
+
+
     private fun startObservingShoppingList(uid: String) {
         shoppingJob = viewModelScope.launch {
             repository.getShoppingList(uid).collectLatest {
@@ -62,6 +67,21 @@ class ShoppingListViewModel(
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             repository.toggleItem(uid, item)
+
+            // If checking (not unchecking) — add to pantry
+            if (!item.isChecked) {
+                val sevenDays = System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000L
+                val pantryItem = PantryItem(
+                    id = java.util.UUID.randomUUID().toString(),
+                    name = item.name,
+                    quantity = "1",
+                    unit = "",
+                    category = "",
+                    expiryDate = sevenDays,
+                    isExpiringSoon = false
+                )
+                pantryRepository.addItem(uid, pantryItem)
+            }
         }
     }
 
