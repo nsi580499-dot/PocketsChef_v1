@@ -2,17 +2,14 @@ package es.uc3m.android.pockets_chef_app.data.repository
 
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.dataObjects
 import com.google.firebase.firestore.toObject
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.tasks.await
-import com.google.firebase.firestore.Query
-
-
+import kotlinx.coroutines.flow.map
+import com.google.firebase.firestore.snapshots
 class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.getInstance()) {
 
     private val recipeCollection = db.collection("recipes")
@@ -50,12 +47,23 @@ class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
     fun getRecipesByAuthor(authorId: String): Flow<List<Recipe>> {
         return recipeCollection
             .whereEqualTo("authorId", authorId)
-            .dataObjects<Recipe>()
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.mapNotNull { document ->
+                    document.toObject<Recipe>()?.copy(id = document.id)
+                }
+            }
     }
+
     fun getLatestPublicRecipes(): Flow<List<Recipe>> {
         return recipeCollection
             .whereEqualTo("isPublic", true)
-            .dataObjects<Recipe>()
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.mapNotNull { document ->
+                    document.toObject<Recipe>()?.copy(id = document.id)
+                }
+            }
     }
     suspend fun uploadRecipeImage(userId: String, imageUri: Uri): Result<String> = try {
         val fileName = "recipes/${userId}/${System.currentTimeMillis()}.jpg"

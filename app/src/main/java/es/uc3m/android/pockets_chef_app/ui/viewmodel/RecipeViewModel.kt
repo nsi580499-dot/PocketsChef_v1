@@ -212,8 +212,23 @@ class RecipeViewModel(
 
         viewModelScope.launch {
             try {
+                val uid = auth.currentUser?.uid ?: return@launch
                 val db = FirebaseFirestore.getInstance()
-                db.collection("recipes").document(recipeId).delete().await()
+
+                val batch = db.batch()
+
+                // Delete recipe document
+                batch.delete(db.collection("recipes").document(recipeId))
+
+                // Remove recipeId from user's list
+                batch.update(
+                    db.collection("users").document(uid),
+                    "myRecipeIds",
+                    com.google.firebase.firestore.FieldValue.arrayRemove(recipeId)
+                )
+
+                batch.commit().await()
+
                 _deleteRecipeSuccess.value = true
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to delete recipe"
