@@ -54,14 +54,14 @@ fun RecipesScreenContent(
     onRecipeClick: (String) -> Unit,
     onFavoriteToggle: (Recipe) -> Unit
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) } // 0=All, 1=Favorites, 2=CookAI
+    var selectedTab by remember { mutableIntStateOf(0) } // 0=All, 1=Favorites
 
     val displayedRecipes = remember(recipesList, selectedTab, searchQuery) {
         val base = when (selectedTab) {
             1 -> recipesList.filter { it.isFavorite }
-            2 -> recipesList.filter { it.source == "cookai" }
-            else -> recipesList.filter { it.source != "cookai" }
+            else -> recipesList
         }
+
         if (searchQuery.isBlank()) base
         else base.filter { it.title.contains(searchQuery, ignoreCase = true) }
     }
@@ -147,11 +147,7 @@ fun RecipesScreenContent(
                     onClick = { selectedTab = 1 },
                     text = { Text(stringResource(R.string.favorites_tab), fontWeight = FontWeight.Bold) }
                 )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = { Text(stringResource(R.string.cookai_tab), fontWeight = FontWeight.Bold) }
-                )
+
             }
 
             if (displayedRecipes.isEmpty()) {
@@ -162,7 +158,6 @@ fun RecipesScreenContent(
                         Text(
                             text = when (selectedTab) {
                                 1 -> stringResource(R.string.no_favorites_message)
-                                2 -> stringResource(R.string.no_cookai_recipes)
                                 else -> stringResource(R.string.no_recipes_found_message)
                             },
                             style = MaterialTheme.typography.bodyMedium,

@@ -22,9 +22,7 @@ class ChatRepository(
 
     private val chatCollection = db.collection("chat_sessions")
     private val recipeCollection = db.collection("recipes")
-    private val usersCollection = db.collection("users")
 
-    // 1. Model initialization with system instruction
     fun createGenerativeModel(user: User): GenerativeModel {
         val systemInstruction = """
             You are CookAI, an expert cooking assistant for Pockets Chef.
@@ -36,15 +34,17 @@ class ChatRepository(
             - Preferences: ${user.dietaryPreferences.joinToString()}
             - Bio: ${user.bio}
 
-            Instructions:
+            Important rules:
             1. Always respond in English.
             2. Do NOT use Spanish under any circumstances.
             3. Do NOT start responses with greetings like "Hi" or "Hello".
             4. Be friendly and encouraging.
             5. Adapt explanations to the user's ${user.cookingLevel} level.
             6. Respect dietary preferences.
-            7. If context includes recipes, use them.
-            8. Keep answers clear and concise.
+            7. You can use existing recipes from the Pockets Chef database when they are provided in the context.
+            8. Do NOT claim that you saved, created, uploaded, published, or added a recipe to the app.
+            9. If the user asks you to create a new recipe, only write the recipe as a chat answer. Do not say it has been saved.
+            10. Keep answers clear and concise.
         """.trimIndent()
 
         return GenerativeModel(
@@ -54,34 +54,61 @@ class ChatRepository(
         )
     }
 
-    // 2. Retrieval from Firestore
     private suspend fun retrieveRelevantContext(queryText: String): String {
         return try {
+            val queryWords = queryText
+                .lowercase()
+                .split(" ", ",", ".", "?", "!", ":", ";", "\n")
+                .map { it.trim() }
+                .filter { it.length >= 3 }
+                .toSet()
+
             val recipes = recipeCollection
-                .whereArrayContainsAny("category", queryText.split(" "))
-                .limit(3)
+                .whereEqualTo("isPublic", true)
+                .limit(50)
                 .get()
                 .await()
                 .toObjects(Recipe::class.java)
 
-            if (recipes.isEmpty()) return "No relevant recipes were found."
+            val relevantRecipes = recipes.filter { recipe ->
+                val searchableText = buildString {
+                    append(recipe.title.lowercase())
+                    append(" ")
+                    append(recipe.description.lowercase())
+                    append(" ")
+                    append(recipe.category.lowercase())
+                    append(" ")
+                    append(recipe.ingredients.joinToString(" ") { it.name.lowercase() })
+                    append(" ")
+                    append(recipe.steps.joinToString(" ") { it.description.lowercase() })
+                }
 
-            val context = StringBuilder("Here is relevant recipe information from Pockets Chef:\n")
-            recipes.forEach { recipe ->
-                context.append(
-                    "- ${recipe.title}: ${recipe.description}. Ingredients: ${
-                        recipe.ingredients.joinToString { it.name }
-                    }\n"
-                )
+                queryWords.any { word -> searchableText.contains(word) }
+            }.take(5)
+
+            if (relevantRecipes.isEmpty()) {
+                return "No matching recipes were found in the Pockets Chef database."
             }
-            context.toString()
+
+            buildString {
+                appendLine("Existing recipes from the Pockets Chef database that may be relevant:")
+                relevantRecipes.forEach { recipe ->
+                    appendLine()
+                    appendLine("Recipe title: ${recipe.title}")
+                    appendLine("Description: ${recipe.description}")
+                    appendLine("Category: ${recipe.category}")
+                    appendLine("Cooking time: ${recipe.duration} minutes")
+                    appendLine("Servings: ${recipe.servings}")
+                    appendLine("Ingredients: ${recipe.ingredients.joinToString { it.name }}")
+                    appendLine("Steps: ${recipe.steps.joinToString(" | ") { it.description }}")
+                }
+            }
 
         } catch (e: Exception) {
-            "Error retrieving context: ${e.message}"
+            "Could not retrieve recipes from the database: ${e.message}"
         }
     }
 
-    // 3. Chat logic (RAG + streaming)
     fun sendMessageStream(
         generativeModel: GenerativeModel,
         history: List<Content>,
@@ -96,6 +123,10 @@ class ChatRepository(
 
             User request:
             $userMessage
+
+            Answer using the database context when it is relevant.
+            If a matching database recipe exists, mention its title.
+            Do not save, create, upload, publish, or add recipes to the database.
         """.trimIndent()
 
         val chat = generativeModel.startChat(history)
@@ -105,7 +136,6 @@ class ChatRepository(
         }
     }
 
-    // Firebase methods
     suspend fun startNewChatSession(userId: String, title: String): Result<String> = try {
         val docRef = chatCollection.document()
         val session = ChatSession(
