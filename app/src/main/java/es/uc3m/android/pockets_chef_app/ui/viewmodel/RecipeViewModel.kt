@@ -82,7 +82,7 @@ class RecipeViewModel(
     }
 
     private fun observeRecipesAndFavorites(uid: String?) {
-        viewModelScope.launch {
+        recipesJob = viewModelScope.launch {
             val recipesFlow = recipeRepository.getLatestPublicRecipes()
             val favoritesFlow = if (uid != null) {
                 userRepository.getFavoriteRecipeIdsFlow(uid)
@@ -96,6 +96,7 @@ class RecipeViewModel(
                 }
             }.collect { combinedList ->
                 _recipesState.value = combinedList
+                _isLoadingRecipes.value = false
             }
         }
     }
@@ -106,7 +107,7 @@ class RecipeViewModel(
             return
         }
 
-        viewModelScope.launch {
+        myRecipesJob = viewModelScope.launch {
             val recipesFlow = recipeRepository.getRecipesByAuthor(uid)
             val favoritesFlow = userRepository.getFavoriteRecipeIdsFlow(uid)
 
@@ -280,6 +281,11 @@ class RecipeViewModel(
     fun clearError() { _errorMessage.value = null }
 
     fun clearData() {
+        recipesJob?.cancel()
+        myRecipesJob?.cancel()
+        recipesJob = null
+        myRecipesJob = null
+
         currentObservedUid = null
         searchQuery = ""
         showFavoritesOnly = false
@@ -288,6 +294,7 @@ class RecipeViewModel(
         _createRecipeSuccess.value = false
         _updateRecipeSuccess.value = false
         _deleteRecipeSuccess.value = false
+        _isLoadingRecipes.value = false
         _errorMessage.value = null
     }
 }

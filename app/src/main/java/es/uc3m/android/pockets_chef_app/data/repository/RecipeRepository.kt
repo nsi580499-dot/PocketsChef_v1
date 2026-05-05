@@ -55,7 +55,6 @@ class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
     fun getLatestPublicRecipes(): Flow<List<Recipe>> {
         return recipeCollection
             .whereEqualTo("isPublic", true)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .dataObjects<Recipe>()
     }
     suspend fun uploadRecipeImage(userId: String, imageUri: Uri): Result<String> = try {

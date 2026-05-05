@@ -58,6 +58,8 @@ import java.util.concurrent.TimeUnit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import es.uc3m.android.pockets_chef_app.ui.screens.EditRecipeScreen
 import es.uc3m.android.pockets_chef_app.ui.screens.NotificationsScreen
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,6 +72,11 @@ class MainActivity : ComponentActivity() {
 
         NotificationHelper.createNotificationChannels(this)
         scheduleExpiryWorker()
+
+        FirebaseFirestore.getInstance().firestoreSettings =
+            FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(false)
+                .build()
 
         setContent {
             PocketsChefTheme {
