@@ -1,5 +1,6 @@
 package es.uc3m.android.pockets_chef_app.ui.screens
 
+import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,10 +29,13 @@ import coil.compose.AsyncImage
 import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.repository.ImageUploadHelper
 import es.uc3m.android.pockets_chef_app.ui.components.UserAvatar
+import es.uc3m.android.pockets_chef_app.ui.util.LocaleHelper
 import es.uc3m.android.pockets_chef_app.ui.util.cookingLevels
+import es.uc3m.android.pockets_chef_app.ui.util.supportedLanguages
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
 import kotlinx.coroutines.launch
 import java.io.File
+
 
 fun createImageUri(context: Context): Uri {
     val imageFile = File(context.cacheDir, "images/captured_${System.currentTimeMillis()}.jpg")
@@ -61,7 +65,9 @@ fun EditProfileScreen(
     var photoUrl by rememberSaveable { mutableStateOf("") }
     var diet by rememberSaveable { mutableStateOf("") }
     var favoriteCuisine by rememberSaveable { mutableStateOf("") }
+    var selectedLanguage by rememberSaveable { mutableStateOf(LocaleHelper.getSavedLanguage(context)) }
     var levelExpanded by rememberSaveable { mutableStateOf(false) }
+    var languageExpanded by rememberSaveable { mutableStateOf(false) }
     var hasInitialized by rememberSaveable { mutableStateOf(false) }
     var isUploadingImage by remember { mutableStateOf(false) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -73,18 +79,13 @@ fun EditProfileScreen(
         if (success && cameraImageUri != null) {
             isUploadingImage = true
             scope.launch {
-                val uploadResult = ImageUploadHelper.uploadUri(
-                    context, cameraImageUri!!, "profile_images"
-                )
-                if (uploadResult.isSuccess) {
-                    photoUrl = uploadResult.getOrNull() ?: photoUrl
-                }
+                val uploadResult = ImageUploadHelper.uploadUri(context, cameraImageUri!!, "profile_images")
+                if (uploadResult.isSuccess) photoUrl = uploadResult.getOrNull() ?: photoUrl
                 isUploadingImage = false
             }
         }
     }
 
-    // Camera permission launcher — requests permission then launches camera
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -95,7 +96,6 @@ fun EditProfileScreen(
         }
     }
 
-    // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -103,9 +103,7 @@ fun EditProfileScreen(
             isUploadingImage = true
             scope.launch {
                 val uploadResult = ImageUploadHelper.uploadUri(context, uri, "profile_images")
-                if (uploadResult.isSuccess) {
-                    photoUrl = uploadResult.getOrNull() ?: photoUrl
-                }
+                if (uploadResult.isSuccess) photoUrl = uploadResult.getOrNull() ?: photoUrl
                 isUploadingImage = false
             }
         }
@@ -126,13 +124,14 @@ fun EditProfileScreen(
     LaunchedEffect(saveSuccess) {
         if (saveSuccess) {
             viewModel.clearSaveSuccess()
-            navController.popBackStack()
+            // Apply language change and restart
+            LocaleHelper.setLocale(context, selectedLanguage)
+            (context as? Activity)?.recreate()
         }
     }
 
     val nameError = if (name.trim().isBlank()) stringResource(R.string.name_required) else null
-    val descriptionError =
-        if (description.trim().length < 10) stringResource(R.string.desc_min_length) else null
+    val descriptionError = if (description.trim().length < 10) stringResource(R.string.desc_min_length) else null
     val isFormValid = nameError == null && descriptionError == null
 
     Scaffold { innerPadding ->
@@ -162,16 +161,10 @@ fun EditProfileScreen(
                         model = photoUrl,
                         contentDescription = stringResource(R.string.profile_photo_desc),
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
+                        modifier = Modifier.size(100.dp).clip(CircleShape)
                     )
                 } else {
-                    UserAvatar(
-                        profileImageUrl = null,
-                        modifier = Modifier.size(100.dp),
-                        iconPadding = 20
-                    )
+                    UserAvatar(profileImageUrl = null, modifier = Modifier.size(100.dp), iconPadding = 20)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -185,27 +178,15 @@ fun EditProfileScreen(
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedButton(
-                            onClick = {
-                                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.CameraAlt,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
+                        OutlinedButton(onClick = {
+                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                        }) {
+                            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(stringResource(R.string.camera_label))
                         }
-                        OutlinedButton(
-                            onClick = { galleryLauncher.launch("image/*") }
-                        ) {
-                            Icon(
-                                Icons.Default.Photo,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
+                        OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
+                            Icon(Icons.Default.Photo, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(stringResource(R.string.gallery_label))
                         }
@@ -232,6 +213,7 @@ fun EditProfileScreen(
                 supportingText = { if (descriptionError != null) Text(descriptionError) }
             )
 
+            // Cooking level dropdown
             ExposedDropdownMenuBox(
                 expanded = levelExpanded,
                 onExpandedChange = { levelExpanded = !levelExpanded }
@@ -241,12 +223,8 @@ fun EditProfileScreen(
                     onValueChange = {},
                     readOnly = true,
                     label = { Text(stringResource(R.string.cooking_level_label)) },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
                 ExposedDropdownMenu(
                     expanded = levelExpanded,
@@ -255,10 +233,7 @@ fun EditProfileScreen(
                     cookingLevels.forEach { item ->
                         DropdownMenuItem(
                             text = { Text(item) },
-                            onClick = {
-                                level = item
-                                levelExpanded = false
-                            }
+                            onClick = { level = item; levelExpanded = false }
                         )
                     }
                 }
@@ -277,6 +252,37 @@ fun EditProfileScreen(
                 label = { Text(stringResource(R.string.fav_cuisine_label)) },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // Language picker dropdown
+            val currentLanguageName = supportedLanguages.find { it.first == selectedLanguage }?.second ?: "English"
+
+            ExposedDropdownMenuBox(
+                expanded = languageExpanded,
+                onExpandedChange = { languageExpanded = !languageExpanded }
+            ) {
+                OutlinedTextField(
+                    value = currentLanguageName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Language") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = languageExpanded,
+                    onDismissRequest = { languageExpanded = false }
+                ) {
+                    supportedLanguages.forEach { (code, displayName) ->
+                        DropdownMenuItem(
+                            text = { Text(displayName) },
+                            onClick = {
+                                selectedLanguage = code
+                                languageExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             errorMessage?.let {
                 Text(text = it, color = MaterialTheme.colorScheme.error)

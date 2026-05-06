@@ -1,4 +1,5 @@
 <resources>
+    <string name="language_label">Language</string>
     <string name="app_name">PocketsChef</string>
     <string name="welcome">Welcome back, Chef!</string>
     <string name="ready_text">Ready to cook something delicious today?</string>

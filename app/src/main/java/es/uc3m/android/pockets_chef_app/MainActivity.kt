@@ -60,6 +60,7 @@ import es.uc3m.android.pockets_chef_app.ui.screens.EditRecipeScreen
 import es.uc3m.android.pockets_chef_app.ui.screens.NotificationsScreen
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import es.uc3m.android.pockets_chef_app.ui.util.LocaleHelper
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +78,8 @@ class MainActivity : ComponentActivity() {
             FirebaseFirestoreSettings.Builder()
                 .setPersistenceEnabled(false)
                 .build()
+        val savedLanguage = LocaleHelper.getSavedLanguage(this)
+        LocaleHelper.applyLocale(this, savedLanguage)
 
         setContent {
             PocketsChefTheme {
