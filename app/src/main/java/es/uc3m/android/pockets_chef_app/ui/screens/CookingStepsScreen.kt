@@ -41,7 +41,7 @@ fun CookingStepsScreen(
     val recipesList by viewModel.recipesState.collectAsState()
 
     val recipe = remember(recipesList, recipeId) {
-        recipesList.find { it.id == recipeId }
+        viewModel.getRecipeById(recipeId) ?: recipesList.find { it.id == recipeId }
     }
 
     val isLoading = recipesList.isEmpty()

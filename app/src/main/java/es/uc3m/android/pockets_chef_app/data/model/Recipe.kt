@@ -34,7 +34,7 @@ data class Recipe(
     @set:PropertyName("isPublic")
     var isPublic: Boolean = true,
     @ServerTimestamp
-    val createdAt: Date? = null
-)
+    val createdAt: Date? = null,
+    )
 
 val source: String = "" //this one is for testing

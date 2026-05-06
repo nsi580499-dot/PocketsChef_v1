@@ -10,6 +10,7 @@ import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.map
 import com.google.firebase.firestore.snapshots
+import com.google.firebase.firestore.dataObjects
 class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.getInstance()) {
 
     private val recipeCollection = db.collection("recipes")
@@ -75,5 +76,12 @@ class RecipeRepository(private val db: FirebaseFirestore = FirebaseFirestore.get
         Result.success(downloadUrl)
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    fun getCookAIRecipes(authorId: String): Flow<List<Recipe>> {
+        return recipeCollection
+            .whereEqualTo("authorId", authorId)
+            .whereEqualTo("source", "cookai")
+            .dataObjects<Recipe>()
     }
 }

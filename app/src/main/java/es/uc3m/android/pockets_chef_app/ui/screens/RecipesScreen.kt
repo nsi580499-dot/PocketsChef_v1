@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -24,7 +25,6 @@ import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
 import es.uc3m.android.pockets_chef_app.ui.components.RecipeCard
-import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 
 @Composable
@@ -33,12 +33,16 @@ fun RecipesScreen(
     viewModel: RecipeViewModel = viewModel()
 ) {
     val recipesList by viewModel.recipesState.collectAsState()
+    val cookAIRecipes by viewModel.cookAIRecipes.collectAsState()
     val isLoadingRecipes by viewModel.isLoadingRecipes.collectAsState()
+
     LaunchedEffect(viewModel.currentUserId) {
         viewModel.refreshForCurrentUser()
     }
+
     RecipesScreenContent(
         recipesList = recipesList,
+        cookAIRecipes = cookAIRecipes,
         isLoadingRecipes = isLoadingRecipes,
         searchQuery = viewModel.searchQuery,
         onSearchQueryChange = { viewModel.searchQuery = it },
@@ -51,6 +55,7 @@ fun RecipesScreen(
 @Composable
 fun RecipesScreenContent(
     recipesList: List<Recipe>,
+    cookAIRecipes: List<Recipe>,
     isLoadingRecipes: Boolean,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
@@ -58,14 +63,14 @@ fun RecipesScreenContent(
     onRecipeClick: (String) -> Unit,
     onFavoriteToggle: (Recipe) -> Unit
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) } // 0=All, 1=Favorites
+    var selectedTab by remember { mutableIntStateOf(0) }
 
-    val displayedRecipes = remember(recipesList, selectedTab, searchQuery) {
+    val displayedRecipes = remember(recipesList, cookAIRecipes, selectedTab, searchQuery) {
         val base = when (selectedTab) {
-            1 -> recipesList.filter { it.isFavorite }
-            else -> recipesList
+            1 -> (recipesList + cookAIRecipes).filter { it.isFavorite }
+            2 -> cookAIRecipes
+            else -> recipesList.filter { it.source != "cookai" }
         }
-
         if (searchQuery.isBlank()) base
         else base.filter { it.title.contains(searchQuery, ignoreCase = true) }
     }
@@ -129,7 +134,6 @@ fun RecipesScreenContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.background,
@@ -151,7 +155,11 @@ fun RecipesScreenContent(
                     onClick = { selectedTab = 1 },
                     text = { Text(stringResource(R.string.favorites_tab), fontWeight = FontWeight.Bold) }
                 )
-
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = { Text("CookAI", fontWeight = FontWeight.Bold) }
+                )
             }
 
             if (displayedRecipes.isEmpty()) {
@@ -160,13 +168,14 @@ fun RecipesScreenContent(
                         CircularProgressIndicator()
                     } else {
                         Text(
-                            text = if (selectedTab == 1) {
-                                stringResource(R.string.no_favorites_message)
-                            } else {
-                                stringResource(R.string.no_recipes_found_message)
+                            text = when (selectedTab) {
+                                1 -> stringResource(R.string.no_favorites_message)
+                                2 -> "No CookAI recipes yet.\nAsk CookAI for a recipe and save it!"
+                                else -> stringResource(R.string.no_recipes_found_message)
                             },
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -188,5 +197,3 @@ fun RecipesScreenContent(
         }
     }
 }
-
-

@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository = RecipeRepository(),
@@ -39,6 +40,9 @@ class RecipeViewModel(
     val recipesState: StateFlow<List<Recipe>> = _recipesState.asStateFlow()
 
     private val _myRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+
+    private val _cookAIRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val cookAIRecipes: StateFlow<List<Recipe>> = _cookAIRecipes.asStateFlow()
     val myRecipes: StateFlow<List<Recipe>> = _myRecipes.asStateFlow()
 
     private val _createRecipeSuccess = MutableStateFlow(false)
@@ -61,8 +65,18 @@ class RecipeViewModel(
         refreshForCurrentUser()
     }
 
+    private fun observeCookAIRecipes(uid: String?) {
+        if (uid == null) { _cookAIRecipes.value = emptyList(); return }
+        viewModelScope.launch {
+            recipeRepository.getCookAIRecipes(uid).collectLatest {
+                _cookAIRecipes.value = it
+            }
+        }
+    }
+
     fun refreshForCurrentUser() {
         val uid = auth.currentUser?.uid
+        observeCookAIRecipes(uid)
 
         if (currentObservedUid == uid) return
 
@@ -133,7 +147,9 @@ class RecipeViewModel(
     }
 
     fun getRecipeById(id: String): Recipe? {
-        return _recipesState.value.find { it.id == id } ?: _myRecipes.value.find { it.id == id }
+        return _recipesState.value.find { it.id == id }
+            ?: _myRecipes.value.find { it.id == id }
+            ?: _cookAIRecipes.value.find { it.id == id }
     }
 
     fun toggleFavorite(recipe: Recipe) {
@@ -145,6 +161,10 @@ class RecipeViewModel(
             if (it.id == recipe.id) it.copy(isFavorite = newFavoriteStatus) else it
         }
         _myRecipes.value = _myRecipes.value.map {
+            if (it.id == recipe.id) it.copy(isFavorite = newFavoriteStatus) else it
+        }
+
+        _cookAIRecipes.value = _cookAIRecipes.value.map {
             if (it.id == recipe.id) it.copy(isFavorite = newFavoriteStatus) else it
         }
 

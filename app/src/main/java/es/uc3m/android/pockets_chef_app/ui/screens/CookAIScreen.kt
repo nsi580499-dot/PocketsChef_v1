@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,8 +32,11 @@ fun CookAIScreen(
     viewModel: CookAIViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val recipeSaved by viewModel.recipeSaved.collectAsState()
+    val isSaving by viewModel.isSavingRecipe.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.messages.size) {
         if (viewModel.messages.isNotEmpty()) {
@@ -40,7 +44,15 @@ fun CookAIScreen(
         }
     }
 
+    LaunchedEffect(recipeSaved) {
+        if (recipeSaved) {
+            snackbarHostState.showSnackbar("Recipe saved to CookAI tab!")
+            viewModel.clearRecipeSaved()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -74,7 +86,6 @@ fun CookAIScreen(
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     }
-
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -96,7 +107,6 @@ fun CookAIScreen(
                     is CookAIUiState.Loading -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     }
-
                     is CookAIUiState.Error -> {
                         Text(
                             text = (uiState as CookAIUiState.Error).message,
@@ -106,7 +116,6 @@ fun CookAIScreen(
                                 .padding(16.dp)
                         )
                     }
-
                     else -> {
                         LazyColumn(
                             state = listState,
@@ -117,7 +126,13 @@ fun CookAIScreen(
                             contentPadding = PaddingValues(vertical = 16.dp)
                         ) {
                             items(viewModel.messages) { message ->
-                                ChatBubble(message = message)
+                                ChatBubble(
+                                    message = message,
+                                    showSaveButton = message.role == "model" &&
+                                            viewModel.containsRecipe(message.content),
+                                    isSaving = isSaving,
+                                    onSave = { viewModel.saveRecipeFromMessage(message.content) }
+                                )
                             }
                         }
                     }
@@ -144,9 +159,7 @@ fun CookAIScreen(
                         maxLines = 3,
                         enabled = uiState is CookAIUiState.Ready
                     )
-
                     Spacer(modifier = Modifier.width(8.dp))
-
                     IconButton(
                         onClick = {
                             if (inputText.isNotBlank()) {
@@ -174,39 +187,80 @@ fun CookAIScreen(
 
 @Composable
 fun ChatBubble(
-    message: ChatMessage
+    message: ChatMessage,
+    showSaveButton: Boolean = false,
+    isSaving: Boolean = false,
+    onSave: () -> Unit = {}
 ) {
-    val isUser = message.role == stringResource(R.string.user_role)
+    val isUser = message.role == "user"
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-
     val containerColor =
         if (isUser) MaterialTheme.colorScheme.primaryContainer
         else MaterialTheme.colorScheme.secondaryContainer
-
     val contentColor =
         if (isUser) MaterialTheme.colorScheme.onPrimaryContainer
         else MaterialTheme.colorScheme.onSecondaryContainer
 
-    Box(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = alignment
+        horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
-        Surface(
-            color = containerColor,
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 0.dp,
-                bottomEnd = if (isUser) 0.dp else 16.dp
-            ),
-            modifier = Modifier.widthIn(max = 280.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = alignment
         ) {
-            Text(
-                text = parseMarkdown(message.content),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                fontSize = 15.sp,
-                color = contentColor
-            )
+            Surface(
+                color = containerColor,
+                shape = RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
+                    bottomStart = if (isUser) 16.dp else 0.dp,
+                    bottomEnd = if (isUser) 0.dp else 16.dp
+                ),
+                modifier = Modifier.widthIn(max = 280.dp)
+            ) {
+                Text(
+                    text = parseMarkdown(message.content),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    fontSize = 15.sp,
+                    color = contentColor
+                )
+            }
+        }
+
+        if (showSaveButton) {
+            Spacer(modifier = Modifier.height(4.dp))
+            if (isSaving) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 4.dp)
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Saving recipe...",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            } else {
+                OutlinedButton(
+                    onClick = onSave,
+                    modifier = Modifier.padding(start = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.BookmarkAdd,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Save to CookAI Recipes",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
         }
     }
 }
@@ -214,7 +268,6 @@ fun ChatBubble(
 fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
     return androidx.compose.ui.text.buildAnnotatedString {
         val lines = text.lines()
-
         lines.forEachIndexed { lineIndex, line ->
             val cleanLine = line
                 .removePrefix("### ")
@@ -224,18 +277,12 @@ fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
                 .removePrefix("* ")
 
             var i = 0
-
             while (i < cleanLine.length) {
                 when {
                     cleanLine.startsWith("**", i) -> {
                         val end = cleanLine.indexOf("**", i + 2)
-
                         if (end != -1) {
-                            pushStyle(
-                                androidx.compose.ui.text.SpanStyle(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
+                            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold))
                             append(cleanLine.substring(i + 2, end))
                             pop()
                             i = end + 2
@@ -244,10 +291,8 @@ fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
                             i++
                         }
                     }
-
                     cleanLine.startsWith("*", i) -> {
                         val end = cleanLine.indexOf("*", i + 1)
-
                         if (end != -1) {
                             pushStyle(
                                 androidx.compose.ui.text.SpanStyle(
@@ -262,14 +307,12 @@ fun parseMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
                             i++
                         }
                     }
-
                     else -> {
                         append(cleanLine[i])
                         i++
                     }
                 }
             }
-
             if (lineIndex < lines.size - 1) append("\n")
         }
     }

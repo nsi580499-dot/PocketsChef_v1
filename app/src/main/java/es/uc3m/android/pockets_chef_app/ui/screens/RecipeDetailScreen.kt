@@ -78,7 +78,7 @@ fun RecipeDetailScreen(
             shoppingListViewModel.addItem(name, amount)
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.item_added_to_shopping_list, name)
+                    message = "$name added to shopping list"
                 )
             }
         }
