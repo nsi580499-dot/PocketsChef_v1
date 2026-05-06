@@ -284,6 +284,12 @@ class RecipeViewModel(
                 } else {
                     ""
                 }
+                val userProfile = userRepository.getUserProfile(currentUser.uid).getOrNull()
+                val authorName = userProfile?.displayName
+                    ?.takeIf { it.isNotBlank() }
+                    ?: currentUser.displayName
+                    ?: currentUser.email?.substringBefore("@")
+                    ?: "Unknown Chef"
 
                 val recipe = Recipe(
                     title = title,
@@ -294,7 +300,7 @@ class RecipeViewModel(
                     ingredients = ingredients,
                     steps = steps,
                     authorId = currentUser.uid,
-                    authorName = currentUser.displayName ?: currentUser.email?.substringBefore("@").orEmpty(),
+                    authorName =  authorName,
                     isPublic = isPublic,
                     imageUrl = uploadedImageUrl
                 )
