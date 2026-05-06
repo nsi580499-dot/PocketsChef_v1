@@ -69,10 +69,7 @@ fun OtherChefProfileScreen(
     val effectiveIsFollowing = followUiOverride ?: isFollowing
     val followActionInProgress by viewModel.followActionInProgress.collectAsState()
     val followStateLoaded by viewModel.followStateLoaded.collectAsState()
-    val allRecipes by recipeViewModel.recipesState.collectAsState()
-
-    val otherChefRecipes = allRecipes.filter { it.authorId == userId }
-
+    val otherChefRecipes by viewModel.chefRecipes.collectAsState()
     val myUid = authViewModel.getCurrentUserUid() ?: ""
     val isOwnProfile = myUid == userId
     val context = LocalContext.current
@@ -86,6 +83,8 @@ fun OtherChefProfileScreen(
     }
 
     LaunchedEffect(userId, myUid) {
+        viewModel.clearData()
+
         if (myUid.isNotEmpty()) {
             viewModel.loadChef(myUid, userId)
         }

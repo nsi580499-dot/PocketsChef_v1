@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -31,10 +30,10 @@ import es.uc3m.android.pockets_chef_app.R
 import es.uc3m.android.pockets_chef_app.data.model.Ingredient
 import es.uc3m.android.pockets_chef_app.data.model.Recipe
 import es.uc3m.android.pockets_chef_app.navigation.NavGraph
-import es.uc3m.android.pockets_chef_app.ui.theme.PocketsChefTheme
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.ShoppingListViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Delete
 
 @Composable
 fun RecipeDetailScreen(
@@ -52,6 +51,7 @@ fun RecipeDetailScreen(
     val isLoading = recipesList.isEmpty()
     val currentUserId = viewModel.currentUserId
     val isCreator = recipe?.authorId == currentUserId
+    val isCookAIRecipe = recipe?.source == "cookai"
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -61,6 +61,7 @@ fun RecipeDetailScreen(
         recipe = recipe,
         isLoading = isLoading,
         isCreator = isCreator,
+        isCookAIRecipe = isCookAIRecipe,
         snackbarHostState = snackbarHostState,
         onBackClick = { navController.popBackStack() },
         onHomeClick = {
@@ -70,6 +71,10 @@ fun RecipeDetailScreen(
         },
         onStartCookingClick = {
             navController.navigate(NavGraph.CookingSteps.createRoute(recipeId))
+        },
+        onDeleteClick = {
+            viewModel.deleteRecipe(recipeId)
+            navController.popBackStack()
         },
         onEditClick = {
             navController.navigate("edit_recipe/$recipeId")
@@ -91,11 +96,13 @@ fun RecipeDetailScreenContent(
     recipe: Recipe?,
     isLoading: Boolean,
     isCreator: Boolean,
+    isCookAIRecipe: Boolean,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onBackClick: () -> Unit,
     onHomeClick: () -> Unit,
     onStartCookingClick: () -> Unit,
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     onAddToShoppingList: (name: String, amount: String) -> Unit = { _, _ -> }
 ) {
     Scaffold(
@@ -114,7 +121,15 @@ fun RecipeDetailScreenContent(
                 },
                 actionContent = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (isCreator) {
+                        if (isCreator && isCookAIRecipe) {
+                            IconButton(onClick = onDeleteClick) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.delete),
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        } else if (isCreator) {
                             IconButton(onClick = onEditClick) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
@@ -347,33 +362,3 @@ fun IngredientRow(name: String, amount: String) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun RecipeDetailScreenPreview() {
-    PocketsChefTheme {
-        RecipeDetailScreenContent(
-            recipe = Recipe(
-                id = "1",
-                authorId = "user123",
-                title = "Classic Spaghetti Carbonara",
-                category = "Italian",
-                description = "A creamy, rich, and authentic Italian pasta dish.",
-                duration = "25 min",
-                servings = 2,
-                ingredients = listOf(
-                    Ingredient("Spaghetti", "200g"),
-                    Ingredient("Guanciale", "100g"),
-                    Ingredient("Pecorino Romano", "50g"),
-                    Ingredient("Large Eggs", "2")
-                ),
-                steps = emptyList()
-            ),
-            isLoading = false,
-            isCreator = true,
-            onBackClick = {},
-            onHomeClick = {},
-            onStartCookingClick = {},
-            onEditClick = {}
-        )
-    }
-}

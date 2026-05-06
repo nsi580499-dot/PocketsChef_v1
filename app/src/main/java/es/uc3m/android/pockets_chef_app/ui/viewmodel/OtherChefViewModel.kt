@@ -50,6 +50,13 @@ class OtherChefViewModel(
     private var recipesJob: Job? = null
 
     fun loadChef(myUid: String, userId: String) {
+        _chefProfile.value = null
+        _chefRecipes.value = emptyList()
+        _isFollowing.value = false
+        _followStateLoaded.value = false
+        _followUiOverride.value = null
+        _errorMessage.value = null
+
         viewModelScope.launch {
             val result = userRepository.getUserProfile(userId)
             if (result.isSuccess) {
@@ -65,30 +72,23 @@ class OtherChefViewModel(
                 flowOf(emptySet())
             }
 
-            // If viewing own profile, show all recipes (including private). 
-            // Otherwise show only public recipes from that author.
-            val recipesFlow = if (myUid == userId && myUid.isNotEmpty()) {
-                recipeRepository.getRecipesByAuthor(userId)
-            } else {
-                recipeRepository.getLatestPublicRecipes().map { list ->
-                    list.filter { it.authorId == userId }
-                }
-            }
+            val recipesFlow = recipeRepository.getRecipesByAuthor(userId)
 
             combine(recipesFlow, favoritesFlow) { recipes, favIds ->
-                recipes.map { recipe ->
-                    recipe.copy(isFavorite = favIds.contains(recipe.id))
-                }.sortedByDescending { it.createdAt }
+                recipes
+                    .filter { it.source != "cookai" }
+                    .map { recipe ->
+                        recipe.copy(isFavorite = favIds.contains(recipe.id))
+                    }
+                    .sortedByDescending { it.createdAt }
             }.collect { combined ->
                 _chefRecipes.value = combined
             }
         }
 
-        if (myUid != userId && myUid.isNotEmpty()) {
-            _followStateLoaded.value = false
-            _followUiOverride.value = null
+        followingJob?.cancel()
 
-            followingJob?.cancel()
+        if (myUid != userId && myUid.isNotEmpty()) {
             followingJob = viewModelScope.launch {
                 userRepository.isFollowingFlow(myUid, userId).collectLatest { following ->
                     _isFollowing.value = following
@@ -100,6 +100,8 @@ class OtherChefViewModel(
                     }
                 }
             }
+        } else {
+            _followStateLoaded.value = true
         }
     }
 
@@ -149,5 +151,20 @@ class OtherChefViewModel(
             }
             _followActionInProgress.value = false
         }
+    }
+    fun clearData() {
+        followingJob?.cancel()
+        recipesJob?.cancel()
+
+        followingJob = null
+        recipesJob = null
+
+        _chefProfile.value = null
+        _chefRecipes.value = emptyList()
+        _isFollowing.value = false
+        _followActionInProgress.value = false
+        _followStateLoaded.value = false
+        _errorMessage.value = null
+        _followUiOverride.value = null
     }
 }

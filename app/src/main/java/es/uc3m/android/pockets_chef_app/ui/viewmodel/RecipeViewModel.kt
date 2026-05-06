@@ -133,9 +133,12 @@ class RecipeViewModel(
                 val favoritesFlow = userRepository.getFavoriteRecipeIdsFlow(uid)
 
                 combine(recipesFlow, favoritesFlow) { recipes, favIds ->
-                    recipes.map { recipe ->
-                        recipe.copy(isFavorite = favIds.contains(recipe.id))
-                    }.sortedByDescending { it.createdAt }
+                    recipes
+                        .filter { it.source != "cookai" }
+                        .map { recipe ->
+                            recipe.copy(isFavorite = favIds.contains(recipe.id))
+                        }
+                        .sortedByDescending { it.createdAt }
                 }.collect { combined ->
                     _myRecipes.value = combined
                 }
@@ -227,20 +230,19 @@ class RecipeViewModel(
     }
 
     fun deleteRecipe(recipeId: String) {
+        val uid = auth.currentUser?.uid ?: return
+
         _recipesState.value = _recipesState.value.filter { it.id != recipeId }
         _myRecipes.value = _myRecipes.value.filter { it.id != recipeId }
+        _cookAIRecipes.value = _cookAIRecipes.value.filter { it.id != recipeId }
 
         viewModelScope.launch {
             try {
-                val uid = auth.currentUser?.uid ?: return@launch
                 val db = FirebaseFirestore.getInstance()
-
                 val batch = db.batch()
 
-                // Delete recipe document
                 batch.delete(db.collection("recipes").document(recipeId))
 
-                // Remove recipeId from user's list
                 batch.update(
                     db.collection("users").document(uid),
                     "myRecipeIds",

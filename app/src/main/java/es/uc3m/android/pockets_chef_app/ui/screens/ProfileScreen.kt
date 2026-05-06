@@ -35,6 +35,7 @@ import es.uc3m.android.pockets_chef_app.ui.viewmodel.RecipeViewModel
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.UserProfileViewModel
 import es.uc3m.android.pockets_chef_app.ui.components.InfoChip
 import es.uc3m.android.pockets_chef_app.ui.viewmodel.ShoppingListViewModel
+import es.uc3m.android.pockets_chef_app.ui.viewmodel.OtherChefViewModel
 
 @Composable
 fun ProfileScreen(
@@ -42,7 +43,8 @@ fun ProfileScreen(
     authViewModel: AuthViewModel = viewModel(),
     userProfileViewModel: UserProfileViewModel = viewModel(),
     recipeViewModel: RecipeViewModel = viewModel(),
-    shoppingListViewModel: ShoppingListViewModel = viewModel()
+    shoppingListViewModel: ShoppingListViewModel = viewModel(),
+    otherChefViewModel: OtherChefViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
     val userProfile by userProfileViewModel.profile.collectAsState()
@@ -244,6 +246,7 @@ fun ProfileScreen(
                         recipeViewModel.clearData()
                         userProfileViewModel.clearData()
                         shoppingListViewModel.clearData()
+                        otherChefViewModel.clearData()
                         authViewModel.logout()
 
                         navController.navigate(NavGraph.Login.route) {

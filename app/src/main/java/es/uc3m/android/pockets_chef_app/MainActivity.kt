@@ -196,7 +196,7 @@ fun PocketsChefBottomBar(navController: NavController) {
                     }
                 },
                 icon = { Icon(imageVector = screen.icon, contentDescription = screen.label) },
-                label = { Text(screen.label) }
+                alwaysShowLabel = false
             )
         }
     }
